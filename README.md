@@ -31,7 +31,7 @@ const niftron: NIFTRON = new NIFTRON(niftronConfig);
 -Mint Token (CreateCertificate)
 
 ```
-import { NiftronKeypair, CreateCertificateModel, TokenType, CreateCertificateOptionsModel } from "niftron-sdk";
+import { NiftronKeypair, CreateCertificateModel, TokenType } from "niftron-sdk";
 
 ...........
 const testKeyPair: NiftronKeypair = NiftronKeypair.fromSecret("--------- Secret Key -----------");
@@ -54,5 +54,67 @@ niftron.tokenBuilder
     console.log("err" + err);
   });
 
+
+```
+-Mint Token with custom Options (CreateCertificate)
+
+```
+import { NiftronKeypair, CreateCertificateModel, TokenType, CreateCertificateOptionsModel } from "niftron-sdk";
+
+...........
+const testKeyPair: NiftronKeypair = NiftronKeypair.fromSecret("--------- Secret Key -----------");
+
+const createCertificateModel: CreateCertificateModel = {
+  tokenName: "----Unique Name-----",
+  tokenType: TokenType.SFT,
+  tokenData: "-----Stringified Json From User-----",
+  tokenCount: 10,
+  previewImageUrl: "---imageURL---",
+  creatorKeypair: testKeyPair,
+};
+
+const options: CreateCertificateOptionsModel = {
+  tradable: true,//default is false
+  transferable: true,//default is false
+  authorizable: true,//default is false
+  encryptData: true,//default is false
+};
+
+niftron.tokenBuilder
+  .CreateCertificate(createCertificateModel,options)
+  .then((res) => {
+    console.log(res);
+  })
+  .catch((err) => {
+    console.log("err" + err);
+  });
+
+
+```
+## Add Token Data
+
+-Add Certificate Data (AddCertificateData)
+
+```
+import { NiftronKeypair, AddCertificateDataModel, TokenType } from "niftron-sdk";
+
+...........
+const testKeyPair: NiftronKeypair = NiftronKeypair.fromSecret("--------- Secret Key -----------");
+
+
+const addCertificateDataModel: AddCertificateDataModel = {
+  assetCode: "SN**********", //can be retrieved from niftron or use the assetCode provided during creation
+  data: "Stringified Json",
+  ownerKeypair: testKeyPair,
+};
+
+niftron.tokenBuilder
+  .AddCertificatData(addCertificateDataModel)
+  .then((res) => {
+    console.log(res);
+  })
+  .catch((err) => {
+    console.log("err" + err);
+  });
 
 ```
