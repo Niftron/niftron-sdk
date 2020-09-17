@@ -24,6 +24,64 @@ const niftronConfig: NiftronConfig = {
 
 const niftron: NIFTRON = new NIFTRON(niftronConfig);
 
+niftron.initialize()
+
+```
+
+
+## Niftron Auth
+
+-Add Script to index.html
+
+```
+...........
+<head>
+...........
+
+  <script src="https://niftron-util.s3.amazonaws.com/niftron-auth.js"></script>
+
+...........
+</head>
+...........
+
+```
+
+-Niftron Auth Redirect
+
+```
+niftron.user.authRedirect({ redirectUrl: "-----redirectUrl----" });
+
+```
+
+-Niftron Check Auth State
+
+```
+niftron.user.onAuthStateChanged(
+  authUser => {
+    console.log(authUser)
+  }, 
+  err => {
+      if (err) {
+        console.log(err)
+    }
+  }
+);
+```
+
+
+-Niftron Get Current User
+
+```
+niftron.user.getCurrentUser(
+  authUser => {
+    console.log(authUser)
+  }, 
+  err => {
+      if (err) {
+        console.log(err)
+    }
+  }
+);
 ```
 
 ## Mint Token

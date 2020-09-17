@@ -10,16 +10,112 @@ import {
   MediumPrivacyAccountResponse,
   MediumPrivacyUserCreation,
   XDR,
+  AuthModel,
+  MerchantAuthType,
+  UserModel,
+  AuthResponse,
 } from "../models";
 import { niftronUserLambda } from "../constants";
 import { Keypair } from "stellar-sdk";
 import { Utils } from "../utils";
 import { XDRBuilder } from "../xdrBuilder";
+import jwt from "jsonwebtoken";
+import { Observable, Observer, Subject, ErrorObserver } from 'rxjs';
 /**
  * User Class
  */
 export module User {
-  let secretKey: string = "";
+  let merchantKeypair: Keypair;
+  let secretKey: string;
+  let session: UserModel;
+
+
+  const sessionObserver: Observable<any> = Observable.create(function (observer: Observer<any>) {
+    if (localStorage.getItem("niftoken") != null) {
+      const token = localStorage.getItem("niftoken");
+      if (token != null) {
+        jwt.verify(token,
+          "ijk3dp4n",
+          (err: any, decodedToken: any) => {
+            if (err || !decodedToken) {
+              localStorage.removeItem("niftoken");
+              observer.error(new Error("no token"));
+            } else {
+              session = <UserModel>decodedToken
+              observer.next(session);
+              observer.error(null);
+              observer.complete()
+            }
+          }
+        );
+      }
+    }
+    observer.error(new Error("no token"));
+  });
+
+
+  /**
+   * onAuthStateChanged
+   * @param {UserModel} authUser UserModel.
+   * @param {Error} error Error.
+ */
+  export const onAuthStateChanged = (
+    authUser = (val: UserModel) => { return val },
+    error = (err: Error) => { return err }) => {
+    sessionObserver.subscribe({
+      next: (value) => authUser(value),
+      error: (e) => error(e),
+      complete: () => console.log('complete')
+    });
+  }
+
+
+  /**
+   * getCurrentUser
+   * @param {UserModel} authUser UserModel.
+   * @param {Error} error Error.
+ */
+  export const getCurrentUser = (
+    authUser = (val: UserModel) => { return val },
+    error = (err: Error) => { return err }) => {
+    sessionObserver.subscribe({
+      next: (value) => authUser(value),
+      error: (e) => error(e),
+      complete: () => console.log('complete')
+    });
+  }
+
+
+
+  /**
+   * logout
+   */
+  export const logout = () => {
+    localStorage.removeItem("niftoken");
+    window.location.assign(window.location.href);
+
+  }
+  /**
+   * initialize
+   * @param {string} secretKey string.
+   */
+  export const initialize = (secretKey: string) => {
+    merchantKeypair = Keypair.fromSecret(secretKey);
+  };
+  /**
+  * authRedirect
+  * @param {AuthModel} authModel AuthModel.
+  */
+  export const authRedirect = (authModel: AuthModel) => {
+    try {
+      const RedirectUrl = btoa(authModel.redirectUrl)
+      const MerchantAuth = authModel.merchantAuthType ? authModel.merchantAuthType : MerchantAuthType.REGULAR;
+      const authLink = `http://auth.niftron.com/?redirectUrl=${RedirectUrl}&merchantKey=${merchantKeypair.publicKey()}&merchantAuthType=${MerchantAuth}`
+      window.location.assign(authLink);
+    } catch (err) {
+      throw err;
+    }
+  };
   /**
    * register niftron user
    * @param {UserType} type UserType.
@@ -98,7 +194,7 @@ export module User {
         }
       );
 
-     
+
       if (res == null) {
         return null;
       }

@@ -122,7 +122,7 @@ export interface RejectApproval {
 /**
  * NiftronCredential Interface
  */
-export interface NiftronCredential extends File {}
+export interface NiftronCredential extends File { }
 // /**
 //  * NiftronCredential Interface
 //  */
@@ -156,7 +156,7 @@ export interface UserCreation {
 /**
  * High Privacy User Creation
  */
-export interface HighPrivacyUserCreation extends UserCreation {}
+export interface HighPrivacyUserCreation extends UserCreation { }
 
 /**
  * Medium Privacy User Creation
@@ -187,17 +187,17 @@ export interface AccountResponse {
 /**
  * High Privacy Account Creation Response
  */
-export interface HighPrivacyAccountResponse extends AccountResponse {}
+export interface HighPrivacyAccountResponse extends AccountResponse { }
 
 /**
  * Medium Privacy Account Creation Response
  */
-export interface MediumPrivacyAccountResponse extends AccountResponse {}
+export interface MediumPrivacyAccountResponse extends AccountResponse { }
 
 /**
  * Low Privacy Account Creation Response
  */
-export interface LowPrivacyAccountResponse extends AccountResponse {}
+export interface LowPrivacyAccountResponse extends AccountResponse { }
 
 /**
  * Niftron Config
@@ -210,12 +210,12 @@ export interface NiftronConfig {
 /**
  * Niftron Base64String for Images
  */
-export interface Base64String extends String {}
+export interface Base64String extends String { }
 
 /**
  * Niftron Base64String for Images
  */
-export class Base64String extends String {}
+export class Base64String extends String { }
 
 // /**
 //  * Niftron Keypair
@@ -225,7 +225,7 @@ export class Base64String extends String {}
 /**
  * Niftron Keypair
  */
-export class NiftronKeypair extends Keypair {}
+export class NiftronKeypair extends Keypair { }
 /**
  * Niftron Account
  */
@@ -273,4 +273,49 @@ export interface CreateCertificateOptionsModel {
   transferable?: boolean;
   authorizable?: boolean;
   encryptData?: boolean;
+}
+
+/**
+ * User Model
+ */
+// export interface UserModel {
+//   tradable?: boolean;
+//   transferable?: boolean;
+//   authorizable?: boolean;
+//   encryptData?: boolean;
+// }
+
+export interface UserModel {
+  type: String;
+  alias: String;
+  email: String;
+  authType: String;
+  publicKey: String;
+  merchant: String;
+  verified: Boolean;
+  encryptedSecret: String;
+  recoveryQuestion: String;
+  encryptedRecoverySecret: String;
+  accounts: Account[];
+}
+/**
+ * Auth Model
+ */
+export interface AuthModel {
+  redirectUrl: string;
+  merchantAuthType?: MerchantAuthType;
+}
+/**
+ * Auth Response
+ */
+export interface AuthResponse {
+  user?: UserModel;
+  error?: Error;
+}
+/**
+ * Merchant Auth Type
+ */
+export enum MerchantAuthType {
+  REGULAR = "0",
+  ZEROFAILURE = "1",
 }

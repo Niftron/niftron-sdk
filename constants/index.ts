@@ -1,7 +1,7 @@
 //dev
 export var niftronUserLambda = "https://8gq4vhf2j3.execute-api.us-east-1.amazonaws.com/dev";
-// export var niftronTokenLambda = "https://rdty586fta.execute-api.us-east-1.amazonaws.com/dev";
-export var niftronTokenLambda = "http://localhost:7001/api/v1";
+export var niftronTokenLambda = "https://rdty586fta.execute-api.us-east-1.amazonaws.com/dev";
+// export var niftronTokenLambda = "http://localhost:7001/api/v1";
 export var StellarUrlTest= "https://horizon-testnet.stellar.org"
 export var StellarUrl= "https://horizon.stellar.org"
 export var StellarNetwork="TestNet"

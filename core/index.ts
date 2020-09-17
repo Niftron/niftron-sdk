@@ -47,6 +47,7 @@ export class NIFTRON {
       }
       NIFTRON.xdrBuilder.initialize(NIFTRON.secretKey);
       NIFTRON.tokenBuilder.initialize(NIFTRON.secretKey);
+      NIFTRON.user.initialize(NIFTRON.secretKey);
       NIFTRON.isInitialized = true;
     } catch (err) {
       throw err;
@@ -64,7 +65,7 @@ export class NIFTRON {
         );
       }
       if (!NIFTRON.isInitialized) {
-        throw new Error("please initialise the config");
+        throw new Error("please initialize the config");
       }
       return NIFTRON.secretKey;
     } catch (err) {
