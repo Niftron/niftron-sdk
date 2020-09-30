@@ -20,6 +20,7 @@ export enum TokenType {
  */
 export enum TokenCategory {
   CERTIFICATE = "CERTIFICATE",
+  BADGE = "BADGE",
   DIGITALART = "DIGITALART",
   TICKET = "TICKET",
 }
@@ -55,6 +56,27 @@ export interface Token {
  * Certificate Interface
  */
 export interface Certificate {
+  _id?: string;
+  tokenName: string;
+  tokenType?: string;
+  assetRealm: string;
+  tradable: boolean;
+  transferable: boolean;
+  category?: string;
+  assetCode?: string;
+  assetIssuer?: string;
+  assetCount: number;
+  previewUrl: string;
+  ipfsHash?: string;
+  price?: Number;
+  xdr?: string;
+  lastTxnHash?: string;
+}
+
+/**
+ * Badge Interface
+ */
+export interface Badge {
   _id?: string;
   tokenName: string;
   tokenType?: string;
@@ -269,6 +291,29 @@ export interface CreateCertificateModel {
  * Create Certificate Options Model
  */
 export interface CreateCertificateOptionsModel {
+  tradable?: boolean;
+  transferable?: boolean;
+  authorizable?: boolean;
+  encryptData?: boolean;
+}
+
+/**
+ * Create Badge Model
+ */
+export interface CreateBadgeModel {
+  tokenName: string;
+  tokenType: TokenType;
+  tokenData: string;
+  tokenCount: number;
+  tokenCost?: number;
+  previewImageUrl: string;
+  creatorKeypair: NiftronKeypair;
+}
+
+/**
+ * Create Badge Options Model
+ */
+export interface CreateBadgeOptionsModel {
   tradable?: boolean;
   transferable?: boolean;
   authorizable?: boolean;

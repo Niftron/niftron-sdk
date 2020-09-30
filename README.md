@@ -149,6 +149,71 @@ niftron.tokenBuilder
 
 
 ```
+
+
+-Mint Token (CreateBadge)
+
+```
+import { NiftronKeypair, CreateBadgeModel, TokenType } from "niftron-sdk";
+
+...........
+const testKeyPair: NiftronKeypair = NiftronKeypair.fromSecret("--------- Secret Key -----------");
+
+const createBadgeModel: CreateBadgeModel = {
+  tokenName: "----Unique Name-----",
+  tokenType: TokenType.SFT,
+  tokenData: "-----Stringified Json From User-----",
+  tokenCount: 10,
+  previewImageUrl: "---imageURL---",
+  creatorKeypair: testKeyPair,
+};
+
+niftron.tokenBuilder
+  .CreateBadge(createBadgeModel)
+  .then((res) => {
+    console.log(res);
+  })
+  .catch((err) => {
+    console.log("err" + err);
+  });
+
+
+```
+-Mint Token with custom Options (CreateBadge)
+
+```
+import { NiftronKeypair, CreateBadgeModel, TokenType, CreateBadgeOptionsModel } from "niftron-sdk";
+
+...........
+const testKeyPair: NiftronKeypair = NiftronKeypair.fromSecret("--------- Secret Key -----------");
+
+const createBadgeModel: CreateBadgeModel = {
+  tokenName: "----Unique Name-----",
+  tokenType: TokenType.SFT,
+  tokenData: "-----Stringified Json From User-----",
+  tokenCount: 10,
+  previewImageUrl: "---imageURL---",
+  creatorKeypair: testKeyPair,
+};
+
+const options: CreateBadgeOptionsModel = {
+  tradable: true,//default is false
+  transferable: true,//default is false
+  authorizable: true,//default is false
+  encryptData: true,//default is false
+};
+
+niftron.tokenBuilder
+  .CreateBadge(createBadgeModel,options)
+  .then((res) => {
+    console.log(res);
+  })
+  .catch((err) => {
+    console.log("err" + err);
+  });
+
+
+```
 ## Add Token Data
 
 -Add Certificate Data (AddCertificateData)
