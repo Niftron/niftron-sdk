@@ -14,13 +14,17 @@ import {
   MerchantAuthType,
   UserModel,
   AuthResponse,
+  ActivateUserModel,
+  CreateBadgeOptionsModel,
+  NiftronAccount,
 } from "../models";
-import { niftronUserLambda } from "../constants";
-import { Keypair } from "stellar-sdk";
+import { niftronUserLambda, StellarUrlTest, StellarUrl } from "../constants";
+import { Keypair, Server, Networks, TransactionBuilder, Operation } from "stellar-sdk";
 import { Utils } from "../utils";
 import { XDRBuilder } from "../xdrBuilder";
 import jwt from "jsonwebtoken";
-import { Observable, Observer, Subject, ErrorObserver } from 'rxjs';
+import { Observable, Observer } from 'rxjs';
+import { getAccountById, goLive } from "../api";
 /**
  * User Class
  */
@@ -29,6 +33,13 @@ export module User {
   let secretKey: string;
   let session: UserModel;
 
+  /**
+    * initialize
+    * @param {string} secretKey string.
+    */
+  export const initialize = (secretKey: string) => {
+    merchantKeypair = Keypair.fromSecret(secretKey);
+  };
 
   const sessionObserver: Observable<any> = Observable.create(function (observer: Observer<any>) {
     if (localStorage.getItem("niftoken") != null) {
@@ -53,7 +64,6 @@ export module User {
     observer.error(new Error("no token"));
   });
 
-
   /**
    * onAuthStateChanged
    * @param {UserModel} authUser UserModel.
@@ -68,7 +78,6 @@ export module User {
       complete: () => console.log('complete')
     });
   }
-
 
   /**
    * getCurrentUser
@@ -85,8 +94,6 @@ export module User {
     });
   }
 
-
-
   /**
    * logout
    */
@@ -95,13 +102,7 @@ export module User {
     window.location.assign(window.location.href);
 
   }
-  /**
-   * initialize
-   * @param {string} secretKey string.
-   */
-  export const initialize = (secretKey: string) => {
-    merchantKeypair = Keypair.fromSecret(secretKey);
-  };
+
   /**
   * authRedirect
   * @param {AuthModel} authModel AuthModel.
@@ -116,6 +117,7 @@ export module User {
       throw err;
     }
   };
+
   /**
    * register niftron user
    * @param {UserType} type UserType.
@@ -199,7 +201,8 @@ export module User {
         return null;
       }
 
-      if (res.status != 200) {
+      if (res.status == 200) {
+        localStorage.setItem("niftoken", res.data.data.token);
         return res.status;
       }
 
@@ -210,6 +213,7 @@ export module User {
       throw err;
     }
   };
+
   /**
    * Fund Account In Testnet
    * @param {string} publicKey string.
@@ -232,6 +236,7 @@ export module User {
       throw err;
     }
   };
+
   /**
    * Create High Privacy Niftron User
    * @param {HighPrivacyUserCreation} options HighPrivacyUserCreation.
@@ -262,6 +267,7 @@ export module User {
         result.status = "Alias already used";
         return result;
       }
+
       secretKey = keypair.secret();
       result.publicKey = keypair.publicKey();
       result.secretKey = keypair.secret();
@@ -270,6 +276,7 @@ export module User {
       throw err;
     }
   };
+
   /**
    * Create High Privacy Niftron User
    * @param {MediumPrivacyAccountCreation} options MediumPrivacyAccountCreation.
@@ -313,6 +320,7 @@ export module User {
       throw err;
     }
   };
+
   /**
    * Create High Privacy Niftron User
    * @param {LowPrivacyUserCreation} options LowPrivacyUserCreation.
@@ -355,6 +363,148 @@ export module User {
       throw err;
     }
   };
+
+  /**
+   * Login
+   * @param {string} key string.
+   * @param {string} password string.
+   * @returns {Promise<NiftronAccount>} response Promise<NiftronAccount>
+   */
+  export const login = async (key: string, password: string): Promise<NiftronAccount> => {
+    try {
+      const user: NiftronAccount = await getAccountById(key);
+      if (user == null) {
+        throw new Error("Creator account not found in niftron");
+      }
+
+      let pash = sha256(password);
+      ////console.log(pash)
+      let postBody = {
+        key: key,
+        password: pash
+      };
+      const res = await axios.post(niftronUserLambda + "/users/login", postBody, {
+        headers: {
+          // 'Authorization': "bearer " + token,
+          "Content-Type": "application/json"
+        }
+      });
+      if (res == null) {
+        throw new Error("Failed to log in");
+      }
+      switch (res.status) {
+        case 200:
+          localStorage.setItem("niftoken", res.data.data.token);
+
+          return user;
+        case 201:
+          throw new Error("Password is incorrect");
+        case 202:
+          throw new Error("Activate merchant account first");
+        case 203:
+          throw new Error("You are a high privacy user try secret key login");
+        case 400:
+          throw new Error("Failed to log in");
+      }
+
+      return user;
+
+    } catch (err) {
+      throw err;
+    }
+  }
+
+  /**
+     * Login with Secret
+     * @param {string} secretKey string.
+     * @returns {Promise<NiftronAccount>} response Promise<NiftronAccount>
+     */
+  export const loginWithSecret = async (secretKey: string) => {
+    try {
+
+      const user: NiftronAccount = await getAccountById(
+        Keypair.fromSecret(secretKey).publicKey()
+      );
+      if (user == null) {
+        throw new Error("Account not found in niftron");
+      }
+
+      let keypair = Keypair.fromSecret(secretKey)
+      const xdr = await buildLoginXDR(keypair);
+      if (xdr === null) {
+        throw new Error("Login xdr building failed ");
+      }
+
+      //console.log(xdr)
+      let postBody = {
+        xdr: xdr
+      };
+
+      const res = await axios.post(
+        niftronUserLambda + "/users/xdrLogin",
+        postBody,
+        {
+          headers: {
+            // 'Authorization': "bearer " + token,
+            "Content-Type": "application/json"
+          }
+        }
+      );
+
+      if (res == null) {
+        throw new Error("Failed to log in");
+      }
+      switch (res.status) {
+        case 200:
+          localStorage.setItem("niftoken", res.data.data.token);
+
+          return user;
+        case 201:
+          throw new Error("Password is incorrect");
+        case 202:
+          throw new Error("Activate merchant account first");
+        case 203:
+          throw new Error("You are a high privacy user try secret key login");
+        case 400:
+          throw new Error("Failed to log in");
+      }
+
+      return user;
+    } catch (err) {
+      throw err;
+    }
+  }
+
+  /**
+       * build login xdr
+       * @param {Keypair} keypair Keypair.
+       * @returns {string|null} response string|null
+       */
+  const buildLoginXDR = async (keypair: Keypair) => {
+    try {
+      let server = new Server(StellarUrlTest);
+      let sourceAccount;
+      let networkPassphrase;
+      try {
+        sourceAccount = await server.loadAccount(keypair.publicKey());
+        networkPassphrase = Networks.TESTNET
+      } catch (err2) {
+        return null
+      }
+      let transaction = new TransactionBuilder(sourceAccount, {
+        fee: "150",
+        networkPassphrase: networkPassphrase
+      })
+        .addOperation(Operation.manageData({ name: 'login', value: new Date().toUTCString(), }))
+        .setTimeout(0)
+        .build();
+      transaction.sign(keypair);
+      return transaction.toEnvelope().toXDR('base64')
+    } catch (e) {
+      return null
+    }
+  }
+
   // /**
   //  * Download Credentials
   //  */
@@ -369,14 +519,97 @@ export module User {
   //     throw err;
   //   }
   // };
+
   /**
-   * Download Credentials
-   */
-  export const getCredentials = () => {
+* Activate Live Net User
+* @param {ActivateUserModel} activateUserModel ActivateUserModel
+* @returns {Promise<NiftronAccount>} niftronId Promise<NiftronAccount>
+*/
+  export const activateLiveNetUser = async (
+    activateUserModel: ActivateUserModel,
+    // options?: ActivateUserOptionsModel
+  ): Promise<NiftronAccount> => {
     try {
-      return JSON.stringify({ secretKey: secretKey });
+      const user: NiftronAccount = await getAccountById(
+        activateUserModel.userKeypair.publicKey()
+      );
+      if (user == null) {
+        throw new Error("Creator account not found in niftron");
+      }
+      //build go live xdr
+      const goLiveXdr = await XDRBuilder.goLive(
+        activateUserModel.userKeypair.publicKey(),
+        merchantKeypair.publicKey()
+      );
+      //merchant signs go live
+      const signedGoLiveXdr = await XDRBuilder.signXDR(goLiveXdr, merchantKeypair.secret())
+      //submit go live xdr
+      const goLiveRes = await goLive(
+        activateUserModel.userKeypair.publicKey(),
+        merchantKeypair.publicKey(),
+        signedGoLiveXdr
+      );
+      if (goLiveRes == null) {
+        throw new Error("Failed to go live xdr to NIFTRON");
+      }
+      switch (goLiveRes) {
+        case 201:
+          throw new Error("Merchant not found");
+        case 202:
+          throw new Error("Activate merchant account first");
+        case 203:
+          throw new Error("Account not found");
+        case 204:
+          throw new Error("User account is already activated");
+        case 205:
+          throw new Error("Insufficient fund in account");
+        case 400:
+          throw new Error("Failed to go live xdr to NIFTRON");
+      }
+      //build activate xdr
+      const activateXdr = await XDRBuilder.activate(
+        activateUserModel.userKeypair.publicKey(),
+        merchantKeypair.publicKey()
+      );
+      //user signs activate xdr
+      const signedActivateXdr = await XDRBuilder.signXDR(activateXdr, activateUserModel.userKeypair.secret())
+      //submit activate xdr
+      const activateRes = await goLive(
+        activateUserModel.userKeypair.publicKey(),
+        merchantKeypair.publicKey(),
+        signedActivateXdr
+      );
+      if (activateRes == null) {
+        throw new Error("Failed to activate xdr to NIFTRON");
+      }
+      switch (activateRes) {
+        case 200:
+          return user
+        case 201:
+          throw new Error("Merchant not found");
+        case 202:
+          throw new Error("Activate merchant account first");
+        case 203:
+          throw new Error("Account not found");
+        case 204:
+          throw new Error("User account is not live");
+        case 205:
+          throw new Error("Insufficient fund in account");
+        case 400:
+          throw new Error("Failed to activate xdr to NIFTRON");
+      }
+      return user
     } catch (err) {
+      console.log("Certificate minting error" + err);
       throw err;
     }
   };
+
+  // export const getCredentials = () => {
+  //   try {
+  //     return JSON.stringify({ secretKey: secretKey });
+  //   } catch (err) {
+  //     throw err;
+  //   }
+  // };
 }

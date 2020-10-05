@@ -23,6 +23,8 @@ export enum TokenCategory {
   BADGE = "BADGE",
   DIGITALART = "DIGITALART",
   TICKET = "TICKET",
+  GIFTCARD = "GIFTCARD",
+
 }
 /**
  * Token Realm Interface
@@ -77,6 +79,27 @@ export interface Certificate {
  * Badge Interface
  */
 export interface Badge {
+  _id?: string;
+  tokenName: string;
+  tokenType?: string;
+  assetRealm: string;
+  tradable: boolean;
+  transferable: boolean;
+  category?: string;
+  assetCode?: string;
+  assetIssuer?: string;
+  assetCount: number;
+  previewUrl: string;
+  ipfsHash?: string;
+  price?: Number;
+  xdr?: string;
+  lastTxnHash?: string;
+}
+
+/**
+ * GiftCard Interface
+ */
+export interface GiftCard {
   _id?: string;
   tokenName: string;
   tokenType?: string;
@@ -274,10 +297,14 @@ export interface NiftronAccountList {
   publicKey: string;
   accountType: string;
 }
+
+
+
+
 /**
- * Create Certificate Model
+ * Create Token Model
  */
-export interface CreateCertificateModel {
+export interface CreateTokenModel {
   tokenName: string;
   tokenType: TokenType;
   tokenData: string;
@@ -286,38 +313,51 @@ export interface CreateCertificateModel {
   previewImageUrl: string;
   creatorKeypair: NiftronKeypair;
 }
+
+/**
+ * Create Token Options Model
+ */
+export interface CreateTokenOptionsModel {
+  tradable?: boolean;
+  transferable?: boolean;
+  authorizable?: boolean;
+  encryptData?: boolean;
+}
+
+/**
+ * Create Certificate Model
+ */
+export interface CreateCertificateModel extends CreateTokenModel {}
 
 /**
  * Create Certificate Options Model
  */
-export interface CreateCertificateOptionsModel {
-  tradable?: boolean;
-  transferable?: boolean;
-  authorizable?: boolean;
-  encryptData?: boolean;
-}
+export interface CreateCertificateOptionsModel extends CreateTokenOptionsModel {}
 
 /**
  * Create Badge Model
  */
-export interface CreateBadgeModel {
-  tokenName: string;
-  tokenType: TokenType;
-  tokenData: string;
-  tokenCount: number;
-  tokenCost?: number;
-  previewImageUrl: string;
-  creatorKeypair: NiftronKeypair;
-}
-
+export interface CreateBadgeModel extends CreateTokenModel {}
 /**
  * Create Badge Options Model
  */
-export interface CreateBadgeOptionsModel {
-  tradable?: boolean;
-  transferable?: boolean;
-  authorizable?: boolean;
-  encryptData?: boolean;
+export interface CreateBadgeOptionsModel extends CreateTokenOptionsModel {}
+
+
+/**
+ * Create GiftCard Model
+ */
+export interface CreateGiftCardModel extends CreateTokenModel {}
+/**
+ * Create GiftCard Options Model
+ */
+export interface CreateGiftCardOptionsModel extends CreateTokenOptionsModel {}
+
+/**
+ * Activate User Model
+ */
+export interface ActivateUserModel {
+  userKeypair: NiftronKeypair;
 }
 
 /**

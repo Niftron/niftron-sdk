@@ -200,18 +200,18 @@ export module XDRBuilder {
   };
 
 
-    /**
-   * Build Mint Badge XDR
-   * @param {string} tokenName string
-   * @param {string} tokenType string
-   * @param {boolean} tradable boolean
-   * @param {boolean} transferable boolean
-   * @param {boolean} authorizable boolean
-   * @param {string} creator string
-   * @param {number} assetCount number
-   * @param {string} dataHash string
-   * @returns {XDRBuilderResponse} builderResponse XDRBuilderResponse
-   */
+  /**
+ * Build Mint Badge XDR
+ * @param {string} tokenName string
+ * @param {string} tokenType string
+ * @param {boolean} tradable boolean
+ * @param {boolean} transferable boolean
+ * @param {boolean} authorizable boolean
+ * @param {string} creator string
+ * @param {number} assetCount number
+ * @param {string} dataHash string
+ * @returns {XDRBuilderResponse} builderResponse XDRBuilderResponse
+ */
   export const mintBadge = async (
     tokenName: string,
     tokenType: string,
@@ -304,6 +304,211 @@ export module XDRBuilder {
       return {
         xdrs, //, secondaryPublicKey
       };
+    } catch (err) {
+      throw err;
+    }
+  };
+
+/**
+ * Build Mint GiftCard XDR
+ * @param {string} tokenName string
+ * @param {string} tokenType string
+ * @param {boolean} tradable boolean
+ * @param {boolean} transferable boolean
+ * @param {boolean} authorizable boolean
+ * @param {string} creator string
+ * @param {number} assetCount number
+ * @param {string} dataHash string
+ * @returns {XDRBuilderResponse} builderResponse XDRBuilderResponse
+ */
+export const mintGiftCard = async (
+  tokenName: string,
+  tokenType: string,
+  tradable: boolean,
+  transferable: boolean,
+  authorizable: boolean,
+  creator: string,
+  assetCount: number,
+  dataHash: string
+): Promise<XDRBuilderResponse> => {
+  try {
+    let postBody = {
+      tokenName,
+      tokenType,
+      tradable,
+      transferable,
+      authorizable,
+      primaryPublicKey: creator,
+      merchantPublicKey: merchantKeypair.publicKey(),
+      assetCount: assetCount,
+      dataHash: dataHash,
+    };
+    const res = await axios.post(
+      niftronTokenLambda + "/xdrBuilder/mint/giftcard",
+      postBody,
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    if (res === null) {
+      throw Error("failed to build mint badge xdr");
+    }
+    const xdrs = res.data.data;
+    const niftronId = res.data.metaData?.niftronId;
+    return { xdrs, niftronId };
+  } catch (err) {
+    throw err;
+  }
+};
+/**
+ * Build Transfer GiftCard XDR
+ * @param {string} sender string
+ * @param {string} receiver string
+ * @param {string} assetIssuer string
+ * @param {string} assetCode string
+ * @param {string} assetCount string
+ * @param {Array<string>} approvers Array<string>
+ * @param {Date} minTime Date
+ * @param {Date} maxTime Date
+ * @returns {TransferCertificateXDR} transferCertificateXDR TransferCertificateXDR
+ */
+export const transferGiftCard = async (
+  sender: string,
+  receiver: string,
+  assetIssuer: string,
+  assetCode: string,
+  assetCount: string,
+  approvers: Array<string>,
+  minTime: Date,
+  maxTime: Date
+): Promise<any> => {
+  try {
+    let postBody = {
+      sender,
+      receiver,
+      merchant: merchantKeypair.publicKey(),
+      assetIssuer,
+      assetCode,
+      assetCount,
+      approvers,
+      minTime,
+      maxTime,
+    };
+    const res = await axios.post(
+      niftronTokenLambda + "/xdrBuilder/transfer/giftcard",
+      postBody,
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    if (res === null) {
+      throw Error("failed to build transfer badge xdr");
+    }
+    const xdrs = res.data.data;
+    // const secondaryPublicKey = res.data.metaData?.secondaryPublicKey
+    return {
+      xdrs, //, secondaryPublicKey
+    };
+  } catch (err) {
+    throw err;
+  }
+};
+
+
+  /**
+ * Build Go Live XDR
+ * @param {string} userPublicKey string
+ * @param {string} merchantPublicKey string
+ * @returns {string} activateXdr string
+ */
+  export const goLive = async (
+    userPublicKey: string,
+    merchantPublicKey: string
+  ): Promise<string> => {
+    try {
+      let postBody = {
+        userPublicKey,
+        merchantPublicKey
+      };
+      const res = await axios.post(
+        niftronUserLambda + "/xdrBuilder/goLive",
+        postBody,
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      if (res === null) {
+        throw Error("Failed to build go live xdr");
+      }
+      switch (res.data.code) {
+        case 201:
+          throw new Error("Merchant not found");
+        case 202:
+          throw new Error("Activate merchant account first");
+        case 203:
+          throw new Error("User account not found");
+        case 204:
+          throw new Error("User account is already live");
+        case 400:
+          throw new Error("Failed to build go live xdr");
+      }
+
+      const xdr = res.data.data;
+      return xdr;
+    } catch (err) {
+      throw err;
+    }
+  };
+
+  /**
+* Build Activate XDR
+* @param {string} userPublicKey string
+* @param {string} merchantPublicKey string
+* @returns {string} activateXdr string
+*/
+  export const activate = async (
+    userPublicKey: string,
+    merchantPublicKey: string
+  ): Promise<string> => {
+    try {
+      let postBody = {
+        userPublicKey,
+        merchantPublicKey
+      };
+      const res = await axios.post(
+        niftronUserLambda + "/xdrBuilder/activate",
+        postBody,
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      if (res === null) {
+        throw Error("failed to build activate xdr");
+      }
+
+      switch (res.data.code) {
+        case 201:
+          throw new Error("Merchant not found");
+        case 202:
+          throw new Error("Activate merchant account first");
+        case 203:
+          throw new Error("User account not found");
+        case 204:
+          throw new Error("User account is not live");
+        case 400:
+          throw new Error("Failed to build activate xdr");
+      }
+
+      const xdr = res.data.data;
+      return xdr;
     } catch (err) {
       throw err;
     }

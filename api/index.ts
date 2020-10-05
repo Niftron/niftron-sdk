@@ -5,6 +5,8 @@ import {
   AcceptApproval,
   RejectApproval,
   Certificate,
+  Badge,
+  GiftCard,
 } from "../models/niftronModels";
 export async function addCertificate(certificate: Certificate) {
   try {
@@ -26,10 +28,67 @@ export async function addCertificate(certificate: Certificate) {
     return null;
   }
 }
+export async function addBadge(badge: Badge) {
+  try {
+    let postBody = badge;
+    const res = await axios.post(
+      niftronTokenLambda + "/tokens/badge",
+      postBody,
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    if (res == null) {
+      return null;
+    }
+    return res.status;
+  } catch (err) {
+    return null;
+  }
+}
+export async function addGiftCard(giftCard: GiftCard) {
+  try {
+  
+    let postBody = giftCard;
+    const res = await axios.post(
+      niftronTokenLambda + "/tokens/giftcard",
+      postBody,
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    if (res == null) {
+      return null;
+    }
+    return res.status;
+  } catch (err) {
+    return null;
+  }
+}
 export async function transfer(transferModel: Transfer) {
   try {
     let postBody = transferModel;
     const res = await axios.post(niftronTokenLambda + "/transfers", postBody, {
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+    if (res == null) {
+      return null;
+    }
+    return res.status;
+  } catch (err) {
+    return null;
+  }
+}
+export async function submitTransfer(transferModel: Transfer) {
+  try {
+    let postBody = transferModel;
+    const res = await axios.post(niftronTokenLambda + "/transfers/submit", postBody, {
       headers: {
         "Content-Type": "application/json",
       },
@@ -190,9 +249,69 @@ export async function getAccountById(id: string) {
     if (res == null) {
       return null;
     }
-    console.log(res.data.data)
     return res.data.data;
   } catch (err) {
     return null;
   }
 }
+
+
+
+export async function activate(
+  userPublicKey: string,
+  merchantPublicKey: string,
+  xdr: string
+) {
+  try {
+    let postBody = {
+      userPublicKey,
+      merchantPublicKey,
+      xdr
+    };
+    const res = await axios.post(
+      niftronUserLambda + "/users/activate",
+      postBody,
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    if (res == null) {
+      return null;
+    }
+    return res.status;
+  } catch (err) {
+    return null;
+  }
+}
+export async function goLive(
+  userPublicKey: string,
+  merchantPublicKey: string,
+  xdr: string
+) {
+  try {
+    let postBody = {
+      userPublicKey,
+      merchantPublicKey,
+      xdr
+    };
+    const res = await axios.post(
+      niftronUserLambda + "/users/goLive",
+      postBody,
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    if (res == null) {
+      return null;
+    }
+    return res.status;
+  } catch (err) {
+    return null;
+  }
+}
+
+
