@@ -31,7 +31,9 @@ niftron.initialize()
 
 ## Niftron Auth
 
--Add Script to index.html
+The following steps are required to set up Niftron Auth.
+
+-Add Script to index.html on if you are using Niftron Auth Redirect
 
 ```
 ...........
@@ -46,7 +48,7 @@ niftron.initialize()
 
 ```
 
--Niftron Auth Redirect
+-Niftron Auth Redirect allows niftron creators to integrate niftron auth to their applications
 
 ```
 niftron.user.authRedirect({ redirectUrl: "-----redirectUrl----" });

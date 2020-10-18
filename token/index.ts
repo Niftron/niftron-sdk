@@ -264,9 +264,9 @@ export module TokenBuilder {
   };
   /**
 * Creates a new GiftCard Token
-* @param {CreateBadgeModel} createBadgeModel CreateBadgeModel
-* @param {CreateBadgeOptionsModel} options CreateBadgeOptionsModel
-* @returns {string} niftronId string
+* @param {CreateGiftCardModel} createGiftCardModel CreateGiftCardModel
+* @param {CreateGiftCardOptionsModel} options CreateGiftCardOptionsModel
+* @returns { Promise<GiftCard>}  giftCard  Promise<GiftCard>
 */
   export const createGiftCard = async (
     createGiftCardModel: CreateGiftCardModel,
@@ -317,7 +317,7 @@ export module TokenBuilder {
         encryptData ? createGiftCardModel.creatorKeypair.secret() : undefined
       );
 
-      const { xdrs, niftronId } = await XDRBuilder.mintBadge(
+      const { xdrs, niftronId } = await XDRBuilder.mintGiftCard(
         createGiftCardModel.tokenName,
         createGiftCardModel.tokenType,
         tradable,
@@ -383,102 +383,140 @@ export module TokenBuilder {
 
 
 
-  export const transferCertificate = async (
-    tokenName: string,
-    tokenType: TokenType,
-    tradable: boolean,
-    transferable: boolean,
-    tokenData: string
-  ): Promise<Certificate> => {
-    try {
-      const certificate: Certificate = {
-        // _id: niftronId.id,
-        tokenType,
-        tradable,
-        transferable,
-        tokenName,
-        assetRealm: "",
-        assetCount: 0,
-        previewUrl: "",
-      };
-      return certificate;
-    } catch (err) {
-      throw err;
-    }
-  };
-  /**
-   * Creates a new Badge Token
-   * @param {string} tokenName string.
-   * @param {string} tokenData string.
-   * @param {boolean} tradable boolean.
-   * @param {boolean} transferable boolean.
-   * @returns {string} niftronId string
-   */
-  export const transferBadge = async (
-    tokenName: string,
-    tokenType: TokenType,
-    tradable: boolean,
-    transferable: boolean,
-    tokenData: string
-  ): Promise<Badge> => {
-    try {
-      const badge: Badge = {
-        // _id: niftronId.id,
-        tokenType,
-        tradable,
-        transferable,
-        tokenName,
-        assetRealm: "",
-        assetCount: 0,
-        previewUrl: "",
-      };
-      return badge;
-    } catch (err) {
-      throw err;
-    }
-  };
+  // const transferCertificate = async (
+  //   tokenName: string,
+  //   tokenType: TokenType,
+  //   tradable: boolean,
+  //   transferable: boolean,
+  //   tokenData: string
+  // ): Promise<Certificate> => {
+  //   try {
+  //     const certificate: Certificate = {
+  //       // _id: niftronId.id,
+  //       tokenType,
+  //       tradable,
+  //       transferable,
+  //       tokenName,
+  //       assetRealm: "",
+  //       assetCount: 0,
+  //       previewUrl: "",
+  //     };
+  //     return certificate;
+  //   } catch (err) {
+  //     throw err;
+  //   }
+  // };
+  // /**
+  //  * Creates a new Badge Token
+  //  * @param {string} tokenName string.
+  //  * @param {string} tokenData string.
+  //  * @param {boolean} tradable boolean.
+  //  * @param {boolean} transferable boolean.
+  //  * @returns {string} niftronId string
+  //  */
+  // const transferBadge = async (
+  //   tokenName: string,
+  //   tokenType: TokenType,
+  //   tradable: boolean,
+  //   transferable: boolean,
+  //   tokenData: string
+  // ): Promise<Badge> => {
+  //   try {
+  //     const badge: Badge = {
+  //       // _id: niftronId.id,
+  //       tokenType,
+  //       tradable,
+  //       transferable,
+  //       tokenName,
+  //       assetRealm: "",
+  //       assetCount: 0,
+  //       previewUrl: "",
+  //     };
+  //     return badge;
+  //   } catch (err) {
+  //     throw err;
+  //   }
+  // };
 
 
 
 
 
 
-  /**
-   * Transfer Gift Card
-   * @param {Keypair} senderKeypair Keypair.
-   * @param {Keypair} receiverKeypair Keypair.
-   * @param {NiftronId} NiftronId string.
-   * @param {string} assetIssuer string.
-   * @param {number} assetCount number.
-   * @returns {string} niftronId string
-   */
-  export const transferGiftCard = async (
-    tokenName: string,
-    tokenType: TokenType,
-    tradable: boolean,
-    transferable: boolean,
-    tokenData: string
-  ): Promise<Certificate> => {
-    try {
+  // /**
+  //  * Transfer Gift Card
+  //  * @param {Keypair} senderKeypair Keypair.
+  //  * @param {Keypair} receiverKeypair Keypair.
+  //  * @param {NiftronId} NiftronId NiftronId.
+  //  * @param {string} assetIssuer string.
+  //  * @param {number} assetCount number.
+  //  * @returns {string} niftronId string
+  //  */
+  // const transferGiftCard = async (
+  //   senderKeypair: Keypair,
+  //   receiverKeypair: Keypair,
+  //   NiftronId: NiftronId,
+  //   assetIssuer: string,
+  //   assetCount: number
+  // ): Promise<Certificate> => {
+  //   try {
+
+  //     let xdr;
+  //     let rejectXdr;
+  //     // let fundXdr;
+  //     try {
+
+  //       // //console.log(receiver)
+  //       const { xdrs } = await XDRBuilder.transferGiftCard(
+  //         senderKeypair.publicKey(),
+  //         receiverKeypair.publicKey(),
+  //         assetIssuer,
+  //         props.item.assetCode,
+  //         assetCount,
+  //         approversList,
+  //         // minTime,
+  //         // maxTime
+  //       )
+
+  //       // let expireXdr;
+
+  //       if (xdrs != null && xdrs.length > 0) {
+  //         await Promise.all(
+  //           xdrs.map(async (item, index, array) => {
+  //             xdrs[index].xdr = await signXDR(item.xdr, keypair.secret());
+  //           })
+  //         );
+  //         // fundXdr = xdrs[0]?.xdr
+  //         xdr = xdrs[0]?.xdr
+  //         rejectXdr = xdrs[1]?.xdr
+  //         // cancelXdr = xdrs[2]?.xdr
+  //         // expireXdr = xdrs[3]?.xdr
+  //       }
+
+
+
+  //     } catch (e) {
+  //     }
 
 
 
 
 
 
-      const certificate: Certificate = {
-        // _id: niftronId.id,
-        tokenType,
-        tradable,
-        transferable,
-        tokenName,
-        assetRealm: "",
-        assetCount: 0,
-        previewUrl: "",
-      };
-      return certificate;
-    } catch (err) {
-      throw err;
-    }
-  };
+
+  //     const certificate: Certificate = {
+  //       // _id: niftronId.id,
+  //       tokenType,
+  //       tradable,
+  //       transferable,
+  //       tokenName,
+  //       assetRealm: "",
+  //       assetCount: 0,
+  //       previewUrl: "",
+  //     };
+  //     return certificate;
+  //   } catch (err) {
+  //     throw err;
+  //   }
+  // };
 }
