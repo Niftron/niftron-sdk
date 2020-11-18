@@ -264,8 +264,9 @@ export module User {
         throw new Error("Registration failed");
       }
       if (response === 202) {
-        result.status = "Alias already used";
-        return result;
+        throw new Error("Alias already used");
+        // result.status = "Alias already used";
+        // return result;
       }
 
       secretKey = keypair.secret();
@@ -305,12 +306,10 @@ export module User {
         throw new Error("Registration failed");
       }
       if (response === 202) {
-        result.status = "Alias already used";
-        return result;
+        throw new Error("Alias already used");
       }
       if (response === 201) {
-        result.status = "Email already used";
-        return result;
+        throw new Error("Email already used");
       }
       secretKey = keypair.secret();
       result.publicKey = keypair.publicKey();
@@ -348,12 +347,10 @@ export module User {
         throw new Error("Registration failed");
       }
       if (response === 202) {
-        result.status = "Alias already used";
-        return result;
+        throw new Error("Alias already used");
       }
       if (response === 201) {
-        result.status = "Email already used";
-        return result;
+        throw new Error("Alias already used");
       }
       secretKey = keypair.secret();
       result.publicKey = keypair.publicKey();
@@ -374,7 +371,7 @@ export module User {
     try {
       const user: NiftronAccount = await getAccountById(key);
       if (user == null) {
-        throw new Error("Creator account not found in niftron");
+        throw new Error("Account not found in niftron");
       }
 
       let pash = sha256(password);
@@ -405,9 +402,11 @@ export module User {
           throw new Error("You are a high privacy user try secret key login");
         case 400:
           throw new Error("Failed to log in");
+        default:
+          throw new Error("Failed to log in");
       }
 
-      return user;
+      // return user;
 
     } catch (err) {
       throw err;
@@ -467,9 +466,11 @@ export module User {
           throw new Error("You are a high privacy user try secret key login");
         case 400:
           throw new Error("Failed to log in");
+        default:
+          throw new Error("Failed to log in");
       }
 
-      return user;
+      // return user;
     } catch (err) {
       throw err;
     }

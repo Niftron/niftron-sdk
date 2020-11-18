@@ -85,6 +85,39 @@ export async function transfer(transferModel: Transfer) {
     return null;
   }
 }
+export async function expressTransfer(transferModel: Transfer) {
+  try {
+    let postBody = transferModel;
+    const res = await axios.post(niftronTokenLambda + "/expressTransfer", postBody, {
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+    if (res == null) {
+      return null;
+    }
+    return res.status;
+  } catch (err) {
+    return null;
+  }
+}
+
+export async function trust(trustModel: any) {
+  try {
+    let postBody = trustModel;
+    const res = await axios.post(niftronTokenLambda + "/trust", postBody, {
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+    if (res == null) {
+      return null;
+    }
+    return res.status;
+  } catch (err) {
+    return null;
+  }
+}
 export async function submitTransfer(transferModel: Transfer) {
   try {
     let postBody = transferModel;

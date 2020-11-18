@@ -14,11 +14,19 @@ import {
   GiftCard,
   CreateGiftCardModel,
   CreateGiftCardOptionsModel,
+  Transfer,
 } from "../models";
 import { IpfsService } from "../ipfsService";
 import { XDRBuilder } from "../xdrBuilder";
-import { Keypair } from "stellar-sdk";
-import { getAccountById, addCertificate, addBadge, addGiftCard } from "../api";
+import {
+  Server,
+  Keypair,
+  Transaction,
+  Networks,
+  AccountResponse,
+} from "stellar-sdk";
+import { getAccountById, addCertificate, addBadge, addGiftCard, expressTransfer, trust } from "../api";
+import Web3 from 'web3';
 /**
  * TokenBuilder Class
  * @param {string} secretKey string.
@@ -380,6 +388,421 @@ export module TokenBuilder {
   };
 
 
+  /**
+   * Express Transfer Token 
+   * @param {string} senderPublickey string.
+   * @param {string} senderSecretKey string.
+   * @param {string} receiverPublicKey string.
+   * @param {string} NiftronId string.
+   * @param {string} assetIssuer string.
+   * @param {number} assetCount number.
+   * @returns {string} niftronId string
+   */
+  export const expressTransferToken = async (
+    senderPublickey: string,
+    senderSecretKey: string,
+    receiverPublicKey: string,
+    NiftronId: string,
+    assetIssuer: string,
+    assetCount: number,
+
+  ): Promise<Transfer> => {
+    try {
+
+      let xdr;
+      try {
+        const { xdrs } = await XDRBuilder.expressTransfer(
+          senderPublickey,
+          receiverPublicKey,
+          assetIssuer,
+          NiftronId,
+          assetCount
+        )
+        if (xdrs != null && xdrs.length > 0) {
+          await Promise.all(
+            xdrs.map(async (item: any, index: number) => {
+              xdrs[index].xdr = await XDRBuilder.signXDR(item.xdr, senderSecretKey);
+              if (senderSecretKey !== merchantKeypair.secret()) {
+                xdrs[index].xdr = await XDRBuilder.signXDR(xdrs[index].xdr, merchantKeypair.secret());
+              }
+            })
+          );
+          xdr = xdrs[0]?.xdr
+        }
+      } catch (e) {
+        throw e
+      }
+
+      //in testnet (should add check to change)
+      let parsedTx: Transaction = new Transaction(xdr, Networks.TESTNET);
+      let txnHash = parsedTx.hash().toString("hex");
+
+      const expressT: Transfer = {
+        transferType: "0",
+        sender: senderPublickey,
+        receiver: receiverPublicKey,
+        assetCode: NiftronId,
+        assetIssuer,
+        assetCount,
+        xdr,
+        txnHash
+      };
+      const serverRes = await expressTransfer(expressT);
+      if (serverRes == null) {
+        throw new Error("Failed to submit expressTransfer to NIFTRON");
+      }
+      switch (serverRes) {
+        case 200:
+          return expressT;
+        case 201:
+          throw new Error("Merchant not found");
+        case 202:
+          throw new Error("User not found");
+        case 400:
+          throw new Error("Failed to submit expressTransfer to NIFTRON");
+        default:
+          throw new Error("Failed to submit expressTransfer to NIFTRON");
+      }
+    } catch (err) {
+      throw err;
+    }
+  };
+
+
+
+  /**
+   * Trust Token 
+   * @param {Keypair} senderKeypair Keypair.
+   * @param {string} receiverPublicKey string.
+   * @param {string} NiftronId string.
+   * @param {string} assetIssuer string.
+   * @param {number} assetCount number.
+   * @returns {string} niftronId string
+   */
+  export const trustToken = async (
+    trusterKeypair: Keypair,
+    NiftronId: string,
+    assetIssuer: string,
+  ): Promise<Transfer> => {
+    try {
+      let xdr;
+      try {
+        const { xdrs } = await XDRBuilder.trust(
+          trusterKeypair.publicKey(),
+          assetIssuer,
+          NiftronId,
+        )
+        if (xdrs != null && xdrs.length > 0) {
+          await Promise.all(
+            xdrs.map(async (item: any, index: number) => {
+              xdrs[index].xdr = await XDRBuilder.signXDR(item.xdr, trusterKeypair.secret());
+            })
+          );
+          xdr = xdrs[0]?.xdr
+        }
+      } catch (e) {
+        throw e
+      }
+
+      const expressT: any = {
+        assetCode: NiftronId,
+        assetIssuer,
+        xdr,
+      };
+      const serverRes = await trust(expressT);
+      if (serverRes == null) {
+        throw new Error("Failed to submit trust to NIFTRON");
+      }
+      switch (serverRes) {
+        case 200:
+          return expressT;
+        case 201:
+          throw new Error("Account not found");
+        case 202:
+          throw new Error("Token not found");
+        case 203:
+          throw new Error("Insufficient fund in account");
+        case 400:
+          throw new Error("Failed to submit trust to NIFTRON");
+        default:
+          throw new Error("Failed to submit trust to NIFTRON");
+      }
+    } catch (err) {
+      throw err;
+    }
+  };
+
+
+
+  /**
+   * Transfer Token
+   * @param {string} senderPublicKey string.
+  * @param {string} receiverPublicKey string.
+  * @param {string} NiftronId string.
+   * @param {number} assetCount number.
+   * @returns {string} niftronId string
+   */
+  export const testEthTransferToken = async (
+    senderPublicKey: string,
+    receiverPublicKey: string,
+    assetCount: number,
+    NiftronId?: string,
+  ): Promise<any> => {
+    try {
+      let contractOption :any= [
+        {
+          "inputs": [],
+          "stateMutability": "nonpayable",
+          "type": "constructor"
+        },
+        {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "tokenOwner",
+              "type": "address"
+            },
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "spender",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "uint256",
+              "name": "tokens",
+              "type": "uint256"
+            }
+          ],
+          "name": "Approval",
+          "type": "event"
+        },
+        {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "from",
+              "type": "address"
+            },
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "to",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "uint256",
+              "name": "tokens",
+              "type": "uint256"
+            }
+          ],
+          "name": "Transfer",
+          "type": "event"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "address",
+              "name": "owner",
+              "type": "address"
+            },
+            {
+              "internalType": "address",
+              "name": "delegate",
+              "type": "address"
+            }
+          ],
+          "name": "allowance",
+          "outputs": [
+            {
+              "internalType": "uint256",
+              "name": "",
+              "type": "uint256"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "address",
+              "name": "delegate",
+              "type": "address"
+            },
+            {
+              "internalType": "uint256",
+              "name": "numTokens",
+              "type": "uint256"
+            }
+          ],
+          "name": "approve",
+          "outputs": [
+            {
+              "internalType": "bool",
+              "name": "",
+              "type": "bool"
+            }
+          ],
+          "stateMutability": "nonpayable",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "address",
+              "name": "tokenOwner",
+              "type": "address"
+            }
+          ],
+          "name": "balanceOf",
+          "outputs": [
+            {
+              "internalType": "uint256",
+              "name": "",
+              "type": "uint256"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function"
+        },
+        {
+          "inputs": [],
+          "name": "decimals",
+          "outputs": [
+            {
+              "internalType": "uint8",
+              "name": "",
+              "type": "uint8"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function"
+        },
+        {
+          "inputs": [],
+          "name": "name",
+          "outputs": [
+            {
+              "internalType": "string",
+              "name": "",
+              "type": "string"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function"
+        },
+        {
+          "inputs": [],
+          "name": "symbol",
+          "outputs": [
+            {
+              "internalType": "string",
+              "name": "",
+              "type": "string"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function"
+        },
+        {
+          "inputs": [],
+          "name": "totalSupply",
+          "outputs": [
+            {
+              "internalType": "uint256",
+              "name": "",
+              "type": "uint256"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "address",
+              "name": "receiver",
+              "type": "address"
+            },
+            {
+              "internalType": "uint256",
+              "name": "numTokens",
+              "type": "uint256"
+            }
+          ],
+          "name": "transfer",
+          "outputs": [
+            {
+              "internalType": "bool",
+              "name": "",
+              "type": "bool"
+            }
+          ],
+          "stateMutability": "nonpayable",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "address",
+              "name": "owner",
+              "type": "address"
+            },
+            {
+              "internalType": "address",
+              "name": "buyer",
+              "type": "address"
+            },
+            {
+              "internalType": "uint256",
+              "name": "numTokens",
+              "type": "uint256"
+            }
+          ],
+          "name": "transferFrom",
+          "outputs": [
+            {
+              "internalType": "bool",
+              "name": "",
+              "type": "bool"
+            }
+          ],
+          "stateMutability": "nonpayable",
+          "type": "function"
+        }
+      ]
+      // try {
+        // contractOption = require('ERC20Basic.json');
+
+      // } catch (e) {
+      //   const fs = require('fs')
+      //   contractOption = JSON.parse(fs.readFileSync('ERC20Basic.json', 'utf-8'))
+      // }
+
+      let web3 = new Web3("HTTP://127.0.0.1:8545");
+      // contractOption = require('./ERC20Basic.json');
+
+      let contract = new web3.eth.Contract(contractOption, "0xab50b581a71aD946083a4E82E3dA515377EF13E4")
+      contract.methods.transfer(receiverPublicKey, assetCount)
+        .send({ from: senderPublicKey, value: 0 })
+        .then((f: any) => {
+          console.log(f)
+          return f
+        }).catch((e: any) => {
+          console.log(e)
+          throw new Error("Failed to submit transfer to NIFTRON");
+        })
+    } catch (err) {
+      throw err;
+    }
+  };
 
 
 

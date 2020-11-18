@@ -1,3 +1,4 @@
+import { AsymmetricEncryption } from "./asymmetricEncryption";
 const CryptoJS = require("crypto-js");
 
 /**
@@ -21,5 +22,8 @@ export module Utils {
       throw error;
     }
   };
+
+  export const asymmetricEncryption = AsymmetricEncryption;
+
 }
 

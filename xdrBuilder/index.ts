@@ -309,114 +309,114 @@ export module XDRBuilder {
     }
   };
 
-/**
- * Build Mint GiftCard XDR
- * @param {string} tokenName string
- * @param {string} tokenType string
- * @param {boolean} tradable boolean
- * @param {boolean} transferable boolean
- * @param {boolean} authorizable boolean
- * @param {string} creator string
- * @param {number} assetCount number
- * @param {string} dataHash string
- * @returns {XDRBuilderResponse} builderResponse XDRBuilderResponse
- */
-export const mintGiftCard = async (
-  tokenName: string,
-  tokenType: string,
-  tradable: boolean,
-  transferable: boolean,
-  authorizable: boolean,
-  creator: string,
-  assetCount: number,
-  dataHash: string
-): Promise<XDRBuilderResponse> => {
-  try {
-    let postBody = {
-      tokenName,
-      tokenType,
-      tradable,
-      transferable,
-      authorizable,
-      primaryPublicKey: creator,
-      merchantPublicKey: merchantKeypair.publicKey(),
-      assetCount: assetCount,
-      dataHash: dataHash,
-    };
-    const res = await axios.post(
-      niftronTokenLambda + "/xdrBuilder/mint/giftcard",
-      postBody,
-      {
-        headers: {
-          "Content-Type": "application/json",
-        },
+  /**
+   * Build Mint GiftCard XDR
+   * @param {string} tokenName string
+   * @param {string} tokenType string
+   * @param {boolean} tradable boolean
+   * @param {boolean} transferable boolean
+   * @param {boolean} authorizable boolean
+   * @param {string} creator string
+   * @param {number} assetCount number
+   * @param {string} dataHash string
+   * @returns {XDRBuilderResponse} builderResponse XDRBuilderResponse
+   */
+  export const mintGiftCard = async (
+    tokenName: string,
+    tokenType: string,
+    tradable: boolean,
+    transferable: boolean,
+    authorizable: boolean,
+    creator: string,
+    assetCount: number,
+    dataHash: string
+  ): Promise<XDRBuilderResponse> => {
+    try {
+      let postBody = {
+        tokenName,
+        tokenType,
+        tradable,
+        transferable,
+        authorizable,
+        primaryPublicKey: creator,
+        merchantPublicKey: merchantKeypair.publicKey(),
+        assetCount: assetCount,
+        dataHash: dataHash,
+      };
+      const res = await axios.post(
+        niftronTokenLambda + "/xdrBuilder/mint/giftcard",
+        postBody,
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      if (res === null) {
+        throw Error("failed to build mint badge xdr");
       }
-    );
-    if (res === null) {
-      throw Error("failed to build mint badge xdr");
+      const xdrs = res.data.data;
+      const niftronId = res.data.metaData?.niftronId;
+      return { xdrs, niftronId };
+    } catch (err) {
+      throw err;
     }
-    const xdrs = res.data.data;
-    const niftronId = res.data.metaData?.niftronId;
-    return { xdrs, niftronId };
-  } catch (err) {
-    throw err;
-  }
-};
-/**
- * Build Transfer GiftCard XDR
- * @param {string} sender string
- * @param {string} receiver string
- * @param {string} assetIssuer string
- * @param {string} assetCode string
- * @param {string} assetCount string
- * @param {Array<string>} approvers Array<string>
- * @param {Date} minTime Date
- * @param {Date} maxTime Date
- * @returns {TransferCertificateXDR} transferCertificateXDR TransferCertificateXDR
- */
-export const transferGiftCard = async (
-  sender: string,
-  receiver: string,
-  assetIssuer: string,
-  assetCode: string,
-  assetCount: string,
-  approvers: Array<string>,
-  minTime: Date,
-  maxTime: Date
-): Promise<any> => {
-  try {
-    let postBody = {
-      sender,
-      receiver,
-      merchant: merchantKeypair.publicKey(),
-      assetIssuer,
-      assetCode,
-      assetCount,
-      approvers,
-      minTime,
-      maxTime,
-    };
-    const res = await axios.post(
-      niftronTokenLambda + "/xdrBuilder/transfer/giftcard",
-      postBody,
-      {
-        headers: {
-          "Content-Type": "application/json",
-        },
+  };
+  /**
+   * Build Transfer GiftCard XDR
+   * @param {string} sender string
+   * @param {string} receiver string
+   * @param {string} assetIssuer string
+   * @param {string} assetCode string
+   * @param {string} assetCount string
+   * @param {Array<string>} approvers Array<string>
+   * @param {Date} minTime Date
+   * @param {Date} maxTime Date
+   * @returns {TransferCertificateXDR} transferCertificateXDR TransferCertificateXDR
+   */
+  export const transferGiftCard = async (
+    sender: string,
+    receiver: string,
+    assetIssuer: string,
+    assetCode: string,
+    assetCount: string,
+    approvers: Array<string>,
+    minTime: Date,
+    maxTime: Date
+  ): Promise<any> => {
+    try {
+      let postBody = {
+        sender,
+        receiver,
+        merchant: merchantKeypair.publicKey(),
+        assetIssuer,
+        assetCode,
+        assetCount,
+        approvers,
+        minTime,
+        maxTime,
+      };
+      const res = await axios.post(
+        niftronTokenLambda + "/xdrBuilder/transfer/giftcard",
+        postBody,
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      if (res === null) {
+        throw Error("failed to build transfer badge xdr");
       }
-    );
-    if (res === null) {
-      throw Error("failed to build transfer badge xdr");
+      const xdrs = res.data.data;
+      // const secondaryPublicKey = res.data.metaData?.secondaryPublicKey
+      return {
+        xdrs, //, secondaryPublicKey
+      };
+    } catch (err) {
+      throw err;
     }
-    const xdrs = res.data.data;
-    // const secondaryPublicKey = res.data.metaData?.secondaryPublicKey
-    return {
-      xdrs, //, secondaryPublicKey
-    };
-  } catch (err) {
-    throw err;
-  }
-};
+  };
 
 
   /**
@@ -513,4 +513,94 @@ export const transferGiftCard = async (
       throw err;
     }
   };
+
+
+  /**
+ * Build Express Transfer XDR
+ * @param {string} sender string
+ * @param {string} receiver string
+ * @param {string} assetIssuer string
+ * @param {string} assetCode string
+ * @param {string} assetCount string
+ * @returns {Object<Array<XDR>>} xdrs Object<Array<XDR>>
+ */
+  export const expressTransfer = async (
+    sender: string,
+    receiver: string,
+    assetIssuer: string,
+    assetCode: string,
+    assetCount: number,
+  ): Promise<any> => {
+    try {
+      let postBody = {
+        sender,
+        receiver,
+        merchant: merchantKeypair.publicKey(),
+        assetIssuer,
+        assetCode,
+        assetCount
+      };
+      const res = await axios.post(
+        niftronTokenLambda + "/xdrBuilder/expressTransfer/token",
+        postBody,
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      if (res === null) {
+        throw Error("failed to build express transfer xdr");
+      }
+      const xdrs = res.data.data;
+      // const secondaryPublicKey = res.data.metaData?.secondaryPublicKey
+      return {
+        xdrs, //, secondaryPublicKey
+      };
+    } catch (err) {
+      throw err;
+    }
+  };
+
+
+    /**
+ * Build Trust XDR
+ * @param {string} truster string
+ * @param {string} assetIssuer string
+ * @param {string} assetCode string
+ * @returns {Object<Array<XDR>>} xdrs Object<Array<XDR>>
+ */
+export const trust = async (
+  truster: string,
+  assetIssuer: string,
+  assetCode: string,
+): Promise<any> => {
+  try {
+    let postBody = {
+      truster,
+      merchant: merchantKeypair.publicKey(),
+      assetIssuer,
+      assetCode
+    };
+    const res = await axios.post(
+      niftronTokenLambda + "/xdrBuilder/trust",
+      postBody,
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    if (res === null) {
+      throw Error("failed to build trust xdr");
+    }
+    const xdrs = res.data.data;
+    // const secondaryPublicKey = res.data.metaData?.secondaryPublicKey
+    return {
+      xdrs, //, secondaryPublicKey
+    };
+  } catch (err) {
+    throw err;
+  }
+};
 }

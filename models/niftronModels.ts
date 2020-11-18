@@ -127,14 +127,14 @@ export interface Transfer {
   assetCode: string;
   assetIssuer: string;
   assetCount: Number;
-  previewUrl: string;
+  previewUrl?: string;
   xdr: string;
-  signers: Array<signer>;
-  lastProofHash: string;
-  txnHash: string;
-  status: SignerStatus;
-  createdAt: string;
-  updatedAt: string;
+  signers?: Array<signer>;
+  lastProofHash?: string;
+  txnHash?: string;
+  status?: SignerStatus;
+  createdAt?: string;
+  updatedAt?: string;
 }
 /**
  * signer Interface
