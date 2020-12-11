@@ -13,12 +13,13 @@ npm install --save niftron-sdk
 
 ## Configure SDK
 
-Configure the niftron sdk using your creator secret Key obtained from https://creator.niftron.com.
+Configure the niftron sdk using your project key obtained from https://console.niftron.com and creator secret Key obtained from https://creator.niftron.com.
 
 ```
 import { NiftronConfig, NIFTRON } from "niftron-sdk";
 
 const niftronConfig: NiftronConfig = {
+  projectKey: "--------- Project Key -----------",
   secretKey: "--------- Secret Key -----------",
 };
 
@@ -51,7 +52,7 @@ The following steps are required to set up Niftron Auth.
 -Niftron Auth Redirect allows niftron creators to integrate niftron auth to their applications
 
 ```
-niftron.user.authRedirect({ redirectUrl: "-----redirectUrl----" });
+niftron.user.authRedirect();
 
 ```
 
