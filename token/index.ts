@@ -34,9 +34,16 @@ import Web3 from 'web3';
  */
 export module TokenBuilder {
   let merchantKeypair: Keypair;
+  let projectPublicKey: string | undefined;
 
-  export const initialize = (secretKey: string) => {
+  /**
+      * initialize
+      * @param {string} secretKey string.
+      * @param {string} projectKey string.
+      */
+  export const initialize = (secretKey: string, projectKey?: string) => {
     merchantKeypair = Keypair.fromSecret(secretKey);
+    projectPublicKey = projectKey;
   };
   /**
    * Creates a new Certificate Token
@@ -549,7 +556,7 @@ export module TokenBuilder {
     NiftronId?: string,
   ): Promise<any> => {
     try {
-      let contractOption :any= [
+      let contractOption: any = [
         {
           "inputs": [],
           "stateMutability": "nonpayable",
@@ -779,7 +786,7 @@ export module TokenBuilder {
         }
       ]
       // try {
-        // contractOption = require('ERC20Basic.json');
+      // contractOption = require('ERC20Basic.json');
 
       // } catch (e) {
       //   const fs = require('fs')
@@ -790,15 +797,19 @@ export module TokenBuilder {
       // contractOption = require('./ERC20Basic.json');
 
       let contract = new web3.eth.Contract(contractOption, "0xab50b581a71aD946083a4E82E3dA515377EF13E4")
-      contract.methods.transfer(receiverPublicKey, assetCount)
-        .send({ from: senderPublicKey, value: 0 })
-        .then((f: any) => {
-          console.log(f)
-          return f
-        }).catch((e: any) => {
-          console.log(e)
-          throw new Error("Failed to submit transfer to NIFTRON");
-        })
+
+      return new Promise((resolve) => {
+        contract.methods.transfer(receiverPublicKey, assetCount)
+          .send({ from: senderPublicKey, value: 0 })
+          .then((f: any) => {
+            console.log(f)
+            resolve(f)
+          }).catch((e: any) => {
+            console.log(e)
+            throw new Error("Failed to submit transfer to NIFTRON");
+          })
+
+      })
     } catch (err) {
       throw err;
     }

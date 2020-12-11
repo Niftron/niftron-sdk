@@ -249,6 +249,7 @@ export interface LowPrivacyAccountResponse extends AccountResponse { }
  */
 export interface NiftronConfig {
   secretKey?: string;
+  projectKey?: string;
   credential?: NiftronCredential;
 }
 
@@ -327,31 +328,31 @@ export interface CreateTokenOptionsModel {
 /**
  * Create Certificate Model
  */
-export interface CreateCertificateModel extends CreateTokenModel {}
+export interface CreateCertificateModel extends CreateTokenModel { }
 
 /**
  * Create Certificate Options Model
  */
-export interface CreateCertificateOptionsModel extends CreateTokenOptionsModel {}
+export interface CreateCertificateOptionsModel extends CreateTokenOptionsModel { }
 
 /**
  * Create Badge Model
  */
-export interface CreateBadgeModel extends CreateTokenModel {}
+export interface CreateBadgeModel extends CreateTokenModel { }
 /**
  * Create Badge Options Model
  */
-export interface CreateBadgeOptionsModel extends CreateTokenOptionsModel {}
+export interface CreateBadgeOptionsModel extends CreateTokenOptionsModel { }
 
 
 /**
  * Create GiftCard Model
  */
-export interface CreateGiftCardModel extends CreateTokenModel {}
+export interface CreateGiftCardModel extends CreateTokenModel { }
 /**
  * Create GiftCard Options Model
  */
-export interface CreateGiftCardOptionsModel extends CreateTokenOptionsModel {}
+export interface CreateGiftCardOptionsModel extends CreateTokenOptionsModel { }
 
 /**
  * Activate User Model
@@ -387,8 +388,10 @@ export interface UserModel {
  * Auth Model
  */
 export interface AuthModel {
-  redirectUrl: string;
+  redirectUrl?: string;
   merchantAuthType?: MerchantAuthType;
+  warning?: string;
+  userType?: UserType;
 }
 /**
  * Auth Response

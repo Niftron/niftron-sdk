@@ -13,10 +13,18 @@ import { XDRBuilderResponse } from "../models";
  */
 export module XDRBuilder {
   let merchantKeypair: Keypair;
+  let projectPublicKey: string | undefined;
 
-  export const initialize = (secretKey: string) => {
+  /**
+      * initialize
+      * @param {string} secretKey string.
+      * @param {string} projectKey string.
+      */
+  export const initialize = (secretKey: string, projectKey?: string) => {
     merchantKeypair = Keypair.fromSecret(secretKey);
+    projectPublicKey = projectKey;
   };
+
   /**
    * Build Add Niftron Signer XDR
    * @param {string} primaryPublicKey string
@@ -26,7 +34,7 @@ export module XDRBuilder {
     try {
       let postBody = {
         primaryPublicKey,
-        merchantPublicKey: merchantKeypair.publicKey(),
+        merchantPublicKey: projectPublicKey ? projectPublicKey : merchantKeypair.publicKey(),
       };
       const res = await axios.post(
         niftronUserLambda + "/xdrBuilder/register",
@@ -120,7 +128,7 @@ export module XDRBuilder {
         transferable,
         authorizable,
         primaryPublicKey: creator,
-        merchantPublicKey: merchantKeypair.publicKey(),
+        merchantPublicKey: projectPublicKey ? projectPublicKey : merchantKeypair.publicKey(),
         assetCount: assetCount,
         dataHash: dataHash,
       };
@@ -169,7 +177,7 @@ export module XDRBuilder {
       let postBody = {
         sender,
         receiver,
-        merchant: merchantKeypair.publicKey(),
+        merchant: projectPublicKey ? projectPublicKey : merchantKeypair.publicKey(),
         assetIssuer,
         assetCode,
         assetCount,
@@ -230,7 +238,7 @@ export module XDRBuilder {
         transferable,
         authorizable,
         primaryPublicKey: creator,
-        merchantPublicKey: merchantKeypair.publicKey(),
+        merchantPublicKey: projectPublicKey ? projectPublicKey : merchantKeypair.publicKey(),
         assetCount: assetCount,
         dataHash: dataHash,
       };
@@ -279,7 +287,7 @@ export module XDRBuilder {
       let postBody = {
         sender,
         receiver,
-        merchant: merchantKeypair.publicKey(),
+        merchant: projectPublicKey ? projectPublicKey : merchantKeypair.publicKey(),
         assetIssuer,
         assetCode,
         assetCount,
@@ -339,7 +347,7 @@ export module XDRBuilder {
         transferable,
         authorizable,
         primaryPublicKey: creator,
-        merchantPublicKey: merchantKeypair.publicKey(),
+        merchantPublicKey: projectPublicKey ? projectPublicKey : merchantKeypair.publicKey(),
         assetCount: assetCount,
         dataHash: dataHash,
       };
@@ -388,7 +396,7 @@ export module XDRBuilder {
       let postBody = {
         sender,
         receiver,
-        merchant: merchantKeypair.publicKey(),
+        merchant: projectPublicKey ? projectPublicKey : merchantKeypair.publicKey(),
         assetIssuer,
         assetCode,
         assetCount,
@@ -535,7 +543,7 @@ export module XDRBuilder {
       let postBody = {
         sender,
         receiver,
-        merchant: merchantKeypair.publicKey(),
+        merchant: projectPublicKey ? projectPublicKey : merchantKeypair.publicKey(),
         assetIssuer,
         assetCode,
         assetCount
@@ -563,44 +571,44 @@ export module XDRBuilder {
   };
 
 
-    /**
- * Build Trust XDR
- * @param {string} truster string
- * @param {string} assetIssuer string
- * @param {string} assetCode string
- * @returns {Object<Array<XDR>>} xdrs Object<Array<XDR>>
- */
-export const trust = async (
-  truster: string,
-  assetIssuer: string,
-  assetCode: string,
-): Promise<any> => {
-  try {
-    let postBody = {
-      truster,
-      merchant: merchantKeypair.publicKey(),
-      assetIssuer,
-      assetCode
-    };
-    const res = await axios.post(
-      niftronTokenLambda + "/xdrBuilder/trust",
-      postBody,
-      {
-        headers: {
-          "Content-Type": "application/json",
-        },
+  /**
+* Build Trust XDR
+* @param {string} truster string
+* @param {string} assetIssuer string
+* @param {string} assetCode string
+* @returns {Object<Array<XDR>>} xdrs Object<Array<XDR>>
+*/
+  export const trust = async (
+    truster: string,
+    assetIssuer: string,
+    assetCode: string,
+  ): Promise<any> => {
+    try {
+      let postBody = {
+        truster,
+        merchant: projectPublicKey ? projectPublicKey : merchantKeypair.publicKey(),
+        assetIssuer,
+        assetCode
+      };
+      const res = await axios.post(
+        niftronTokenLambda + "/xdrBuilder/trust",
+        postBody,
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      if (res === null) {
+        throw Error("failed to build trust xdr");
       }
-    );
-    if (res === null) {
-      throw Error("failed to build trust xdr");
+      const xdrs = res.data.data;
+      // const secondaryPublicKey = res.data.metaData?.secondaryPublicKey
+      return {
+        xdrs, //, secondaryPublicKey
+      };
+    } catch (err) {
+      throw err;
     }
-    const xdrs = res.data.data;
-    // const secondaryPublicKey = res.data.metaData?.secondaryPublicKey
-    return {
-      xdrs, //, secondaryPublicKey
-    };
-  } catch (err) {
-    throw err;
-  }
-};
+  };
 }

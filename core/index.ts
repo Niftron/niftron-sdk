@@ -6,10 +6,15 @@ import { NiftronConfig } from "../models";
 
 export class NIFTRON {
   private static isInitialized: boolean = false;
-  private static secretKey: string | null = null;
+  private static secretKey: string | undefined = undefined;
+  private static projectKey: string | undefined = undefined;
+
   constructor(niftronConfig: NiftronConfig) {
     if (niftronConfig.secretKey != undefined) {
       NIFTRON.secretKey = niftronConfig.secretKey;
+    }
+    if (niftronConfig.projectKey != undefined) {
+      NIFTRON.projectKey = niftronConfig.projectKey;
     }
     if (niftronConfig.credential != undefined) {
       const niftronCredential: File = niftronConfig.credential;
@@ -26,28 +31,32 @@ export class NIFTRON {
       });
       reader.readAsText(niftronCredential);
     }
-    if (
-      niftronConfig.secretKey != undefined &&
-      niftronConfig.credential != undefined
-    ) {
-      throw new Error(
-        "please provide a secret key or .niftron credential file"
-      );
-    }
+    // if (
+    //   niftronConfig.projectKey == undefined
+    // ) {
+    //   throw new Error(
+    //     "please provide a project key"
+    //   );
+    // }
   }
   /**
    * initializes niftron
    */
   public initialize() {
     try {
-      if (NIFTRON.secretKey == null) {
+      if (NIFTRON.secretKey == undefined) {
         throw new Error(
           "please provide a secret key or .niftron credential file"
         );
       }
-      NIFTRON.xdrBuilder.initialize(NIFTRON.secretKey);
-      NIFTRON.tokenBuilder.initialize(NIFTRON.secretKey);
-      NIFTRON.user.initialize(NIFTRON.secretKey);
+      // if (NIFTRON.projectKey == null) {
+      //   throw new Error(
+      //     "please provide a project key"
+      //   );
+      // }
+      NIFTRON.xdrBuilder.initialize(NIFTRON.secretKey, NIFTRON.projectKey);
+      NIFTRON.tokenBuilder.initialize(NIFTRON.secretKey, NIFTRON.projectKey);
+      NIFTRON.user.initialize(NIFTRON.secretKey, NIFTRON.projectKey);
       NIFTRON.isInitialized = true;
     } catch (err) {
       throw err;

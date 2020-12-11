@@ -29,16 +29,19 @@ import { getAccountById, goLive } from "../api";
  * User Class
  */
 export module User {
-  let merchantKeypair: Keypair;
   let secretKey: string;
   let session: UserModel;
+  let merchantKeypair: Keypair;
+  let projectPublicKey: string | undefined;
 
   /**
-    * initialize
-    * @param {string} secretKey string.
-    */
-  export const initialize = (secretKey: string) => {
+      * initialize
+      * @param {string} secretKey string.
+      * @param {string} projectKey string.
+      */
+  export const initialize = (secretKey: string, projectKey?: string) => {
     merchantKeypair = Keypair.fromSecret(secretKey);
+    projectPublicKey = projectKey;
   };
 
   const sessionObserver: Observable<any> = Observable.create(function (observer: Observer<any>) {
@@ -107,11 +110,42 @@ export module User {
   * authRedirect
   * @param {AuthModel} authModel AuthModel.
   */
-  export const authRedirect = (authModel: AuthModel) => {
+  export const authRedirect = ( test?: boolean) => {
     try {
-      const RedirectUrl = btoa(authModel.redirectUrl)
-      const MerchantAuth = authModel.merchantAuthType ? authModel.merchantAuthType : MerchantAuthType.REGULAR;
-      const authLink = `http://auth.niftron.com/?redirectUrl=${RedirectUrl}&merchantKey=${merchantKeypair.publicKey()}&merchantAuthType=${MerchantAuth}`
+      let query = ""
+      //add projectKey
+      query += `&projectKey=${projectPublicKey}`
+
+      // //add redirect url
+      // if (authModel.redirectUrl && authModel.redirectUrl != "") {
+      //   const RedirectUrl = authModel.redirectUrl
+      //   query += `redirectUrl=${encodeURI(RedirectUrl)}`
+      // }
+
+      // //add merchantKey
+      // query += `&merchantKey=${merchantKeypair.publicKey()}`
+
+      // //add merchantAuthType
+      // if (authModel.merchantAuthType) {
+      //   const MerchantAuth = authModel.merchantAuthType ? authModel.merchantAuthType : MerchantAuthType.REGULAR;
+      //   query += `&merchantAuthType=${encodeURI(MerchantAuth)}`
+      // }
+
+      // //add user account type
+      // if (authModel.userType) {
+      //   const userType = authModel.userType
+      //   query += `&type=${encodeURI(userType)}`
+      // }
+
+      // //add warning
+      // if (authModel.warning) {
+      //   const warning = authModel.warning
+      //   query += `&warning=${encodeURI(warning)}`
+      // }
+
+      // const authLink = `https://auth.niftron.com/?${query}`
+      const authLink = test ? `https://dev.account.niftron.com/?${query}` : `https://account.niftron.com/?${query}`;
+
       window.location.assign(authLink);
     } catch (err) {
       throw err;
