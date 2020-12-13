@@ -1,4 +1,5 @@
 import { Utils } from "../utils";
+// import IPFS from 'ipfs';
 const IPFS = require("ipfs");
 
 export module IpfsService {

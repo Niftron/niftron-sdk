@@ -12,7 +12,7 @@ export async function addCertificate(certificate: Certificate) {
   try {
     let postBody = certificate;
     const res = await axios.post(
-      niftronTokenLambda + "/tokens/certificate",
+      niftronTokenLambda + "/tokens/mint/certificate",
       postBody,
       {
         headers: {
@@ -32,7 +32,7 @@ export async function addBadge(badge: Badge) {
   try {
     let postBody = badge;
     const res = await axios.post(
-      niftronTokenLambda + "/tokens/badge",
+      niftronTokenLambda + "/tokens/mint/badge",
       postBody,
       {
         headers: {
@@ -53,7 +53,7 @@ export async function addGiftCard(giftCard: GiftCard) {
   
     let postBody = giftCard;
     const res = await axios.post(
-      niftronTokenLambda + "/tokens/giftcard",
+      niftronTokenLambda + "/tokens/mint/giftcard",
       postBody,
       {
         headers: {

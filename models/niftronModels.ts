@@ -66,9 +66,12 @@ export interface Certificate {
   transferable: boolean;
   category?: string;
   assetCode?: string;
-  assetIssuer?: string;
+  assetIssuer: string;
+  issuerAlias: string;
   assetCount: number;
   previewUrl: string;
+  isUrl: boolean;
+
   ipfsHash?: string;
   price?: Number;
   xdr?: string;
@@ -88,8 +91,12 @@ export interface Badge {
   category?: string;
   assetCode?: string;
   assetIssuer?: string;
+  issuerAlias: string;
+
   assetCount: number;
   previewUrl: string;
+  isUrl: boolean;
+
   ipfsHash?: string;
   price?: Number;
   xdr?: string;
@@ -109,8 +116,10 @@ export interface GiftCard {
   category?: string;
   assetCode?: string;
   assetIssuer?: string;
+  issuerAlias: string;
   assetCount: number;
   previewUrl: string;
+  isUrl: boolean;
   ipfsHash?: string;
   price?: Number;
   xdr?: string;
@@ -311,8 +320,11 @@ export interface CreateTokenModel {
   tokenData: string;
   tokenCount: number;
   tokenCost?: number;
+  previewImageBase64?: string;
   previewImageUrl: string;
-  creatorKeypair: NiftronKeypair;
+  creatorPublicKey?: string;
+  creatorKeypair?: NiftronKeypair;
+  test?: boolean;
 }
 
 /**

@@ -73,7 +73,6 @@ export module XDRBuilder {
       let publicKey;
       let server = new Server(StellarUrl);
       let keypair = Keypair.fromSecret(secretKey);
-
       let sourceAccount;
       try {
         parsedTx = new Transaction(xdr, Networks.PUBLIC);

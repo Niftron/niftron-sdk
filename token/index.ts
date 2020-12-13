@@ -15,6 +15,7 @@ import {
   CreateGiftCardModel,
   CreateGiftCardOptionsModel,
   Transfer,
+  NiftronKeypair,
 } from "../models";
 import { IpfsService } from "../ipfsService";
 import { XDRBuilder } from "../xdrBuilder";
@@ -75,8 +76,18 @@ export module TokenBuilder {
         encryptData = options.encryptData ? options.encryptData : encryptData;
       }
 
+      let creatorKeypair: Keypair = createCertificateModel.creatorKeypair != undefined ? createCertificateModel.creatorKeypair : merchantKeypair
+
+      if (createCertificateModel.creatorPublicKey != undefined && createCertificateModel.creatorPublicKey != merchantKeypair.publicKey()) {
+        const secretKey = await approvalPopUp(createCertificateModel.test != undefined ? createCertificateModel.test : false)
+        if (secretKey == null) {
+          throw new Error("Creator account did not approve the transaction");
+        }
+        creatorKeypair = Keypair.fromSecret(secretKey)
+      }
+
       const user: NiftronAccount = await getAccountById(
-        createCertificateModel.creatorKeypair.publicKey()
+        creatorKeypair.publicKey()
       );
 
       if (user == null) {
@@ -84,6 +95,8 @@ export module TokenBuilder {
       }
 
       let IssuerPublicKey = user.publicKey;
+      let IssuerAlias = user.alias;
+
       user.accounts.forEach((account) => {
         if (!tradable && account.accountType == "1") {
           IssuerPublicKey = account.publicKey;
@@ -93,34 +106,36 @@ export module TokenBuilder {
         }
       });
 
-      let previewUrl = createCertificateModel.previewImageUrl;
+
+      let previewUrl = createCertificateModel.previewImageBase64 != undefined ?
+        createCertificateModel.previewImageBase64 : createCertificateModel.previewImageUrl;
 
       const { ipfsHash, data } = await IpfsService.AddToIPFS(
         createCertificateModel.tokenData,
-        encryptData ? createCertificateModel.creatorKeypair.secret() : undefined
+        encryptData ? creatorKeypair.secret() : undefined
       );
-
       const { xdrs, niftronId } = await XDRBuilder.mintCertificate(
         createCertificateModel.tokenName,
         createCertificateModel.tokenType,
         tradable,
         transferable,
         authorizable,
-        createCertificateModel.creatorKeypair.publicKey(),
+        creatorKeypair.publicKey(),
         createCertificateModel.tokenCount,
-        sha256(data)
+        sha256(createCertificateModel.tokenData)
       );
+
       let xdr;
       if (xdrs != null && xdrs.length > 0) {
         await Promise.all(
-          xdrs.map(async (item, index, array) => {
-            xdrs[index].xdr = await XDRBuilder.signXDR(
-              item.xdr,
-              createCertificateModel.creatorKeypair.secret()
-            );
+          xdrs.map(async (item: any, index: number) => {
+            xdrs[index].xdr = await XDRBuilder.signXDR(item.xdr, creatorKeypair.secret());
+            if (creatorKeypair.publicKey() !== merchantKeypair.publicKey()) {
+              xdrs[index].xdr = await XDRBuilder.signXDR(xdrs[index].xdr, merchantKeypair.secret());
+            }
           })
         );
-        xdr = xdrs[0]?.xdr;
+        xdr = xdrs[0]?.xdr
       }
 
       const certificate: Certificate = {
@@ -132,8 +147,10 @@ export module TokenBuilder {
         category: TokenCategory.CERTIFICATE,
         assetCode: niftronId,
         assetIssuer: IssuerPublicKey,
+        issuerAlias: IssuerAlias,
         assetCount: createCertificateModel.tokenCount,
         previewUrl,
+        isUrl: createCertificateModel.previewImageBase64 == undefined ? true : false,
         ipfsHash,
         price: tokenCost,
         xdr,
@@ -151,6 +168,8 @@ export module TokenBuilder {
           throw new Error("Insufficient fund in account");
         case 203:
           throw new Error("Only creators can create Tradable Tokens");
+        case 204:
+          throw new Error("Token name already used by issuer");
         case 400:
           throw new Error("Failed to submit certificate to NIFTRON");
         default:
@@ -168,16 +187,16 @@ export module TokenBuilder {
  * @returns {string} niftronId string
  */
   export const createBadge = async (
-    createCertificateModel: CreateBadgeModel,
+    createBadgeModel: CreateBadgeModel,
     options?: CreateBadgeOptionsModel
-  ): Promise<Badge> => {
+  ): Promise<Badge | null> => {
     try {
       let tradable: boolean = false;
       let transferable: boolean = false;
       let authorizable: boolean = false;
       let encryptData: boolean = false;
-      let tokenCost: number = createCertificateModel.tokenCost
-        ? createCertificateModel.tokenCost
+      let tokenCost: number = createBadgeModel.tokenCost
+        ? createBadgeModel.tokenCost
         : 0;
 
       if (options) {
@@ -191,15 +210,26 @@ export module TokenBuilder {
         encryptData = options.encryptData ? options.encryptData : encryptData;
       }
 
-      const user: NiftronAccount = await getAccountById(
-        createCertificateModel.creatorKeypair.publicKey()
-      );
+      let creatorKeypair: NiftronKeypair = createBadgeModel.creatorKeypair != undefined ? createBadgeModel.creatorKeypair : merchantKeypair
 
+      if (createBadgeModel.creatorPublicKey != undefined && createBadgeModel.creatorPublicKey != merchantKeypair.publicKey()) {
+        const secretKey = await approvalPopUp(createBadgeModel.test != undefined ? createBadgeModel.test : false)
+        if (secretKey == null) {
+          throw new Error("Creator account did not approve the transaction");
+        }
+        creatorKeypair = Keypair.fromSecret(secretKey)
+      }
+
+      const user: NiftronAccount = await getAccountById(
+        creatorKeypair.publicKey()
+      );
       if (user == null) {
         throw new Error("Creator account not found in niftron");
       }
 
       let IssuerPublicKey = user.publicKey;
+      let IssuerAlias = user.alias;
+
       user.accounts.forEach((account) => {
         if (!tradable && account.accountType == "1") {
           IssuerPublicKey = account.publicKey;
@@ -209,51 +239,57 @@ export module TokenBuilder {
         }
       });
 
-      let previewUrl = createCertificateModel.previewImageUrl;
+      let previewUrl = createBadgeModel.previewImageBase64 != undefined ?
+        createBadgeModel.previewImageBase64 : createBadgeModel.previewImageUrl;
 
-      const { ipfsHash, data } = await IpfsService.AddToIPFS(
-        createCertificateModel.tokenData,
-        encryptData ? createCertificateModel.creatorKeypair.secret() : undefined
-      );
+      // const { ipfsHash, data } = await IpfsService.AddToIPFS(
+      //   createBadgeModel.tokenData,
+      //   encryptData ? creatorKeypair.secret() : undefined
+      // );
 
       const { xdrs, niftronId } = await XDRBuilder.mintBadge(
-        createCertificateModel.tokenName,
-        createCertificateModel.tokenType,
+        createBadgeModel.tokenName,
+        createBadgeModel.tokenType,
         tradable,
         transferable,
         authorizable,
-        createCertificateModel.creatorKeypair.publicKey(),
-        createCertificateModel.tokenCount,
-        sha256(data)
+        creatorKeypair.publicKey(),
+        createBadgeModel.tokenCount,
+        sha256(createBadgeModel.tokenData)
       );
       let xdr;
       if (xdrs != null && xdrs.length > 0) {
         await Promise.all(
-          xdrs.map(async (item, index, array) => {
-            xdrs[index].xdr = await XDRBuilder.signXDR(
-              item.xdr,
-              createCertificateModel.creatorKeypair.secret()
-            );
+          xdrs.map(async (item: any, index: number) => {
+            xdrs[index].xdr = await XDRBuilder.signXDR(item.xdr, creatorKeypair.secret());
+            if (creatorKeypair.publicKey() !== merchantKeypair.publicKey()) {
+              xdrs[index].xdr = await XDRBuilder.signXDR(xdrs[index].xdr, merchantKeypair.secret());
+            }
           })
         );
-        xdr = xdrs[0]?.xdr;
+        xdr = xdrs[0]?.xdr
       }
 
       const badge: Badge = {
-        tokenName: createCertificateModel.tokenName,
-        tokenType: createCertificateModel.tokenType,
+        tokenName: createBadgeModel.tokenName,
+        tokenType: createBadgeModel.tokenType,
         assetRealm: TokenRealm.DIGITAL,
         tradable,
         transferable,
         category: TokenCategory.BADGE,
         assetCode: niftronId,
         assetIssuer: IssuerPublicKey,
-        assetCount: createCertificateModel.tokenCount,
+        issuerAlias: IssuerAlias,
+        assetCount: createBadgeModel.tokenCount,
         previewUrl,
-        ipfsHash,
+        isUrl: createBadgeModel.previewImageBase64 == undefined ? true : false,
+        ipfsHash: "ipfsHash",
         price: tokenCost,
         xdr,
       };
+
+      console.log("OK so far 5")
+
       const serverRes = await addBadge(badge);
       if (serverRes == null) {
         throw new Error("Failed to submit certificate to NIFTRON");
@@ -267,13 +303,17 @@ export module TokenBuilder {
           throw new Error("Insufficient fund in account");
         case 203:
           throw new Error("Only creators can create Tradable Tokens");
+        case 204:
+          throw new Error("Token name already used by issuer");
         case 400:
           throw new Error("Failed to submit certificate to NIFTRON");
         default:
           throw new Error("Failed to submit certificate to NIFTRON");
       }
+
+
     } catch (err) {
-      console.log("Certificate minting error" + err);
+      console.log("Badge minting error" + err);
       throw err;
     }
   };
@@ -307,8 +347,18 @@ export module TokenBuilder {
         encryptData = options.encryptData ? options.encryptData : encryptData;
       }
 
+      let creatorKeypair: NiftronKeypair = createGiftCardModel.creatorKeypair != undefined ? createGiftCardModel.creatorKeypair : merchantKeypair
+
+      if (createGiftCardModel.creatorPublicKey != undefined && createGiftCardModel.creatorPublicKey != merchantKeypair.publicKey()) {
+        const secretKey = await approvalPopUp(createGiftCardModel.test != undefined ? createGiftCardModel.test : false)
+        if (secretKey == null) {
+          throw new Error("Creator account did not approve the transaction");
+        }
+        creatorKeypair = Keypair.fromSecret(secretKey)
+      }
+
       const user: NiftronAccount = await getAccountById(
-        createGiftCardModel.creatorKeypair.publicKey()
+        creatorKeypair.publicKey()
       );
 
       if (user == null) {
@@ -316,6 +366,8 @@ export module TokenBuilder {
       }
 
       let IssuerPublicKey = user.publicKey;
+      let IssuerAlias = user.alias;
+
       user.accounts.forEach((account) => {
         if (!tradable && account.accountType == "1") {
           IssuerPublicKey = account.publicKey;
@@ -325,11 +377,12 @@ export module TokenBuilder {
         }
       });
 
-      let previewUrl = createGiftCardModel.previewImageUrl;
+      let previewUrl = createGiftCardModel.previewImageBase64 != undefined ?
+        createGiftCardModel.previewImageBase64 : createGiftCardModel.previewImageUrl;
 
       const { ipfsHash, data } = await IpfsService.AddToIPFS(
         createGiftCardModel.tokenData,
-        encryptData ? createGiftCardModel.creatorKeypair.secret() : undefined
+        encryptData ? creatorKeypair.secret() : undefined
       );
 
       const { xdrs, niftronId } = await XDRBuilder.mintGiftCard(
@@ -338,7 +391,7 @@ export module TokenBuilder {
         tradable,
         transferable,
         authorizable,
-        createGiftCardModel.creatorKeypair.publicKey(),
+        creatorKeypair.publicKey(),
         createGiftCardModel.tokenCount,
         sha256(data)
       );
@@ -348,7 +401,7 @@ export module TokenBuilder {
           xdrs.map(async (item, index, array) => {
             xdrs[index].xdr = await XDRBuilder.signXDR(
               item.xdr,
-              createGiftCardModel.creatorKeypair.secret()
+              creatorKeypair.secret()
             );
           })
         );
@@ -364,6 +417,8 @@ export module TokenBuilder {
         category: TokenCategory.GIFTCARD,
         assetCode: niftronId,
         assetIssuer: IssuerPublicKey,
+        issuerAlias: IssuerAlias,
+        isUrl: createGiftCardModel.previewImageBase64 == undefined ? true : false,
         assetCount: createGiftCardModel.tokenCount,
         previewUrl,
         ipfsHash,
@@ -383,6 +438,8 @@ export module TokenBuilder {
           throw new Error("Insufficient fund in account");
         case 203:
           throw new Error("Only creators can create Tradable Tokens");
+        case 204:
+          throw new Error("Token name already used by issuer");
         case 400:
           throw new Error("Failed to submit giftcard to NIFTRON");
         default:
@@ -397,24 +454,35 @@ export module TokenBuilder {
 
   /**
    * Express Transfer Token 
-   * @param {string} senderPublickey string.
-   * @param {string} senderSecretKey string.
    * @param {string} receiverPublicKey string.
    * @param {string} NiftronId string.
    * @param {string} assetIssuer string.
    * @param {number} assetCount number.
+   * @param {string} senderPublickey string.
+   * @param {string} senderSecretKey string.
+   * @param {boolean} test boolean.
    * @returns {string} niftronId string
    */
   export const expressTransferToken = async (
-    senderPublickey: string,
-    senderSecretKey: string,
     receiverPublicKey: string,
     NiftronId: string,
     assetIssuer: string,
     assetCount: number,
-
+    senderPublickey: string,
+    senderSecretKey?: string,
+    test?: boolean
   ): Promise<Transfer> => {
     try {
+
+      let senderKeypair: NiftronKeypair = senderSecretKey != undefined ? Keypair.fromSecret(senderSecretKey) : merchantKeypair
+
+      if (senderPublickey != undefined && senderPublickey != merchantKeypair.publicKey()) {
+        const secretKey = await approvalPopUp(test != undefined ? test : false)
+        if (secretKey == null) {
+          throw new Error("Sender account did not approve the transaction");
+        }
+        senderKeypair = Keypair.fromSecret(secretKey)
+      }
 
       let xdr;
       try {
@@ -428,8 +496,8 @@ export module TokenBuilder {
         if (xdrs != null && xdrs.length > 0) {
           await Promise.all(
             xdrs.map(async (item: any, index: number) => {
-              xdrs[index].xdr = await XDRBuilder.signXDR(item.xdr, senderSecretKey);
-              if (senderSecretKey !== merchantKeypair.secret()) {
+              xdrs[index].xdr = await XDRBuilder.signXDR(item.xdr, senderKeypair.secret());
+              if (senderPublickey !== merchantKeypair.publicKey()) {
                 xdrs[index].xdr = await XDRBuilder.signXDR(xdrs[index].xdr, merchantKeypair.secret());
               }
             })
@@ -479,30 +547,43 @@ export module TokenBuilder {
 
   /**
    * Trust Token 
-   * @param {Keypair} senderKeypair Keypair.
-   * @param {string} receiverPublicKey string.
    * @param {string} NiftronId string.
    * @param {string} assetIssuer string.
-   * @param {number} assetCount number.
+   * @param {string} trusterPublickey string.
+   * @param {string} trusterSecretKey string.
+   * @param {boolean} test boolean.
+
    * @returns {string} niftronId string
    */
   export const trustToken = async (
-    trusterKeypair: Keypair,
     NiftronId: string,
     assetIssuer: string,
+    trusterPublickey: string,
+    trusterSecretKey?: string,
+    test?: boolean
   ): Promise<Transfer> => {
     try {
+
+      let keypair: NiftronKeypair = trusterSecretKey != undefined ? Keypair.fromSecret(trusterSecretKey) : merchantKeypair
+      if (trusterPublickey != undefined && trusterPublickey != merchantKeypair.publicKey()) {
+        const secretKey = await approvalPopUp(test != undefined ? test : false)
+        if (secretKey == null) {
+          throw new Error("Truster account did not approve the transaction");
+        }
+        keypair = Keypair.fromSecret(secretKey)
+      }
+
       let xdr;
       try {
         const { xdrs } = await XDRBuilder.trust(
-          trusterKeypair.publicKey(),
+          trusterPublickey,
           assetIssuer,
           NiftronId,
         )
         if (xdrs != null && xdrs.length > 0) {
           await Promise.all(
             xdrs.map(async (item: any, index: number) => {
-              xdrs[index].xdr = await XDRBuilder.signXDR(item.xdr, trusterKeypair.secret());
+              xdrs[index].xdr = await XDRBuilder.signXDR(item.xdr, keypair.secret());
             })
           );
           xdr = xdrs[0]?.xdr
@@ -815,7 +896,79 @@ export module TokenBuilder {
     }
   };
 
+  export const approvalPopUp = async (test: boolean): Promise<string | null> => {
+    return new Promise((resolve) => {
+      const url = (test ? "https://dev.account.niftron.com/" : "https://account.niftron.com/") +
+        "?serviceType=0" +
+        "&projectKey=" + projectPublicKey +
+        // "&xdr=" + xdr +
+        "&origin=" + window.location.href;
+      const title = ""
+      const width = 720
+      const height = 720
+      var left = (window.screen.width / 2) - (width / 2);
+      var top = (window.screen.height / 2) - (height / 2);
+      var options = '';
 
+      options += 'toolbar=no,location=no,directories=no,status=no';
+      options += ',menubar=no,scrollbars=no,resizable=no,copyhistory=no';
+
+      options += ',width=' + width;
+      options += ',height=' + height;
+      options += ',top=' + top;
+      options += ',left=' + left;
+
+      const MyWindow = window.open(url, title, options);
+      const messageEvent = (event: any) => {
+        if (event.origin !== "https://account.niftron.com" && event.origin !== "https://dev.account.niftron.com")
+          return;
+        window.removeEventListener("message", messageEvent)
+        resolve(event.data)
+      }
+      window.addEventListener("message", messageEvent, false);
+      if (MyWindow != null && MyWindow.closed) {
+        resolve(null)
+      }
+    })
+
+  }
+
+
+  // export const approvalPopUp2 = async (xdr: string): Promise<string> => {
+
+  //   let reponse = ""
+
+  //   const url = "https://dev.account.niftron.com/" +
+  //     "?serviceType=0" +
+  //     "&projectKey=" + projectPublicKey +
+  //     "&xdr=" + xdr +
+  //     "&origin=" + window.location.href;
+  //   const title = ""
+  //   const width = 720
+  //   const height = 720
+  //   var left = (window.screen.width / 2) - (width / 2);
+  //   var top = (window.screen.height / 2) - (height / 2);
+  //   var options = '';
+
+  //   options += 'toolbar=no,location=no,directories=no,status=no';
+  //   options += ',menubar=no,scrollbars=no,resizable=no,copyhistory=no';
+
+  //   options += ',width=' + width;
+  //   options += ',height=' + height;
+  //   options += ',top=' + top;
+  //   options += ',left=' + left;
+
+  //   const MyWindow = window.open(url, title, options);
+  //   const messageEvent = (event: any) => {
+  //     if (event.origin !== "https://account.niftron.com" && event.origin !== "https://dev.account.niftron.com")
+  //       return;
+  //     localStorage.setItem("xdr", event.data)
+  //     window.removeEventListener("message", messageEvent)
+  //     reponse = event.data
+  //   }
+  //   window.addEventListener("message", messageEvent, false);
+  //   return reponse
+  // }
 
   // const transferCertificate = async (
   //   tokenName: string,

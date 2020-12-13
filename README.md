@@ -95,25 +95,22 @@ niftron.user.getCurrentUser(
 import { NiftronKeypair, CreateCertificateModel, TokenType } from "niftron-sdk";
 
 ...........
-const testKeyPair: NiftronKeypair = NiftronKeypair.fromSecret("--------- Secret Key -----------");
-
 const createCertificateModel: CreateCertificateModel = {
   tokenName: "----Unique Name-----",
   tokenType: TokenType.SFT,
   tokenData: "-----Stringified Json From User-----",
   tokenCount: 10,
   previewImageUrl: "---imageURL---",
-  creatorKeypair: testKeyPair,
 };
 
-niftron.tokenBuilder
-  .CreateCertificate(createCertificateModel)
+niftron.tokenBuilder.CreateCertificate(createCertificateModel)
   .then((res) => {
     console.log(res);
   })
   .catch((err) => {
     console.log("err" + err);
   });
+
 
 
 ```
@@ -123,15 +120,12 @@ niftron.tokenBuilder
 import { NiftronKeypair, CreateCertificateModel, TokenType, CreateCertificateOptionsModel } from "niftron-sdk";
 
 ...........
-const testKeyPair: NiftronKeypair = NiftronKeypair.fromSecret("--------- Secret Key -----------");
-
 const createCertificateModel: CreateCertificateModel = {
   tokenName: "----Unique Name-----",
   tokenType: TokenType.SFT,
   tokenData: "-----Stringified Json From User-----",
   tokenCount: 10,
   previewImageUrl: "---imageURL---",
-  creatorKeypair: testKeyPair,
 };
 
 const options: CreateCertificateOptionsModel = {
@@ -157,18 +151,15 @@ niftron.tokenBuilder
 -Mint Token (CreateBadge)
 
 ```
-import { NiftronKeypair, CreateBadgeModel, TokenType } from "niftron-sdk";
+import { CreateBadgeModel, TokenType } from "niftron-sdk";
 
 ...........
-const testKeyPair: NiftronKeypair = NiftronKeypair.fromSecret("--------- Secret Key -----------");
-
 const createBadgeModel: CreateBadgeModel = {
   tokenName: "----Unique Name-----",
   tokenType: TokenType.SFT,
   tokenData: "-----Stringified Json From User-----",
   tokenCount: 10,
   previewImageUrl: "---imageURL---",
-  creatorKeypair: testKeyPair,
 };
 
 niftron.tokenBuilder
@@ -185,18 +176,15 @@ niftron.tokenBuilder
 -Mint Token with custom Options (CreateBadge)
 
 ```
-import { NiftronKeypair, CreateBadgeModel, TokenType, CreateBadgeOptionsModel } from "niftron-sdk";
+import { CreateBadgeModel, TokenType, CreateBadgeOptionsModel } from "niftron-sdk";
 
 ...........
-const testKeyPair: NiftronKeypair = NiftronKeypair.fromSecret("--------- Secret Key -----------");
-
 const createBadgeModel: CreateBadgeModel = {
   tokenName: "----Unique Name-----",
   tokenType: TokenType.SFT,
   tokenData: "-----Stringified Json From User-----",
   tokenCount: 10,
   previewImageUrl: "---imageURL---",
-  creatorKeypair: testKeyPair,
 };
 
 const options: CreateBadgeOptionsModel = {
