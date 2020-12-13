@@ -46,6 +46,7 @@ export module TokenBuilder {
     merchantKeypair = Keypair.fromSecret(secretKey);
     projectPublicKey = projectKey;
   };
+  
   /**
    * Creates a new Certificate Token
    * @param {CreateCertificateModel} createCertificateModel CreateCertificateModel

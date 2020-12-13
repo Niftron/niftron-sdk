@@ -26,44 +26,11 @@ export module XDRBuilder {
   };
 
   /**
-   * Build Add Niftron Signer XDR
-   * @param {string} primaryPublicKey string
-   * @returns {XDRBuilderResponse} builderResponse XDRBuilderResponse
-   */
-  export const register = async (primaryPublicKey: string): Promise<XDRBuilderResponse> => {
-    try {
-      let postBody = {
-        primaryPublicKey,
-        merchantPublicKey: projectPublicKey ? projectPublicKey : merchantKeypair.publicKey(),
-      };
-      const res = await axios.post(
-        niftronUserLambda + "/xdrBuilder/register",
-        postBody,
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
-      if (res === null) {
-        throw Error("failed to build register xdr");
-      }
-      const xdrs = res.data.data;
-      const secondaryPublicKey = res.data.metaData?.secondaryPublicKey;
-      return {
-        xdrs,
-        secondaryPublicKey,
-      };
-    } catch (err) {
-      throw err;
-    }
-  };
-  /**
-   * signXDR
-   * @param {string} xdr string
-   * @param {string} secretKey string
-   * @returns {any} transactionResponse any
-   */
+ * signXDR
+ * @param {string} xdr string
+ * @param {string} secretKey string
+ * @returns {any} transactionResponse any
+ */
   export const signXDR = async (
     xdr: string,
     secretKey: string
@@ -96,6 +63,74 @@ export module XDRBuilder {
       throw err;
     }
   };
+
+  /**
+ * Build Pledge XDR
+ * @param {string} primaryPublicKey string
+ * @returns {XDRBuilderResponse} builderResponse XDRBuilderResponse
+ */
+  export const pledge = async (primaryPublicKey: string, amount?: number): Promise<XDRBuilderResponse> => {
+    try {
+      let postBody = {
+        primaryPublicKey,
+        merchantPublicKey: merchantKeypair.publicKey(),
+        amount
+      };
+      const res = await axios.post(
+        niftronUserLambda + "/xdrBuilder/pledge",
+        postBody,
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      if (res === null) {
+        throw Error("failed to build pledge xdr");
+      }
+      const xdrs = res.data.data;
+      return {
+        xdrs
+      };
+    } catch (err) {
+      throw err;
+    }
+  };
+
+  /**
+   * Build Add Niftron Signer XDR
+   * @param {string} primaryPublicKey string
+   * @returns {XDRBuilderResponse} builderResponse XDRBuilderResponse
+   */
+  export const register = async (primaryPublicKey: string): Promise<XDRBuilderResponse> => {
+    try {
+      let postBody = {
+        primaryPublicKey,
+        merchantPublicKey: projectPublicKey ? projectPublicKey : merchantKeypair.publicKey(),
+      };
+      const res = await axios.post(
+        niftronUserLambda + "/xdrBuilder/register",
+        postBody,
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      if (res === null) {
+        throw Error("failed to build register xdr");
+      }
+      const xdrs = res.data.data;
+      const secondaryPublicKey = res.data.metaData?.secondaryPublicKey;
+      return {
+        xdrs,
+        secondaryPublicKey,
+      };
+    } catch (err) {
+      throw err;
+    }
+  };
+
 
   /**
    * Build Mint Certificate XDR

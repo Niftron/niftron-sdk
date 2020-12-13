@@ -8,6 +8,22 @@ import {
   Badge,
   GiftCard,
 } from "../models/niftronModels";
+export async function pledge(pledgeModel: any) {
+  try {
+    let postBody = pledgeModel;
+    const res = await axios.post(niftronUserLambda + "/users/pledge", postBody, {
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+    if (res == null) {
+      return null;
+    }
+    return res.status;
+  } catch (err) {
+    return null;
+  }
+}
 export async function addCertificate(certificate: Certificate) {
   try {
     let postBody = certificate;

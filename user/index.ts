@@ -17,6 +17,8 @@ import {
   ActivateUserModel,
   CreateBadgeOptionsModel,
   NiftronAccount,
+  PledgeModel,
+  PledgeResponse,
 } from "../models";
 import { niftronUserLambda, StellarUrlTest, StellarUrl } from "../constants";
 import { Keypair, Server, Networks, TransactionBuilder, Operation } from "stellar-sdk";
@@ -24,7 +26,7 @@ import { Utils } from "../utils";
 import { XDRBuilder } from "../xdrBuilder";
 import jwt from "jsonwebtoken";
 import { Observable, Observer } from 'rxjs';
-import { getAccountById, goLive } from "../api";
+import { getAccountById, goLive, pledge } from "../api";
 /**
  * User Class
  */
@@ -43,6 +45,52 @@ export module User {
     merchantKeypair = Keypair.fromSecret(secretKey);
     projectPublicKey = projectKey;
   };
+
+  /**
+  * Test Transfer - Sends a minimum of 2 NIFTRONS to Niftron Distributor
+  * @param {PledgeModel} options PledgeModel.
+  * @returns {PledgeResponse} result PledgeResponse
+  */
+  export const testTransfer = async (
+    options?: PledgeModel
+  ): Promise<PledgeResponse> => {
+    try {
+
+      let { xdrs } = await XDRBuilder.pledge(
+        merchantKeypair.publicKey(), options?.amount ? options.amount : undefined
+      );
+      const xdr = await XDRBuilder.signXDR(xdrs[0].xdr, merchantKeypair.secret());
+
+      let postBody = {
+        primaryPublicKey: merchantKeypair.publicKey(),
+        merchant: projectPublicKey,
+        xdr
+      };
+      const res = await pledge(postBody);
+      if (res == null) {
+        throw new Error("Failed to submit pledge to NIFTRON");
+      }
+
+      switch (res) {
+        case 200:
+          const result: PledgeResponse = {
+            status: "Your pledge has been heard!"
+          }
+          return result;
+        case 201:
+          throw new Error("Account not found");
+        case 202:
+          throw new Error("Insufficient fund in account");
+        case 400:
+          throw new Error("Failed to submit pledge to NIFTRON");
+        default:
+          throw new Error("Failed to submit pledge to NIFTRON");
+      }
+    } catch (err) {
+      throw err;
+    }
+  };
+
 
   const sessionObserver: Observable<any> = Observable.create(function (observer: Observer<any>) {
     if (localStorage.getItem("niftoken") != null) {
@@ -110,7 +158,7 @@ export module User {
   * authRedirect
   * @param {AuthModel} authModel AuthModel.
   */
-  export const authRedirect = ( test?: boolean) => {
+  export const authRedirect = (test?: boolean) => {
     try {
       let query = ""
       //add projectKey

@@ -200,6 +200,20 @@ export enum UserAuthType {
 }
 
 /**
+ * Pledge Model
+ */
+export interface PledgeModel {
+  amount?: number;
+}
+
+/**
+ * Pledge Response
+ */
+export interface PledgeResponse {
+  status: string;
+}
+
+/**
  * User Creation Response
  */
 export interface UserCreation {
