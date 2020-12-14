@@ -19,8 +19,10 @@ import {
   NiftronAccount,
   PledgeModel,
   PledgeResponse,
+  NiftronAssetResponse,
+  XLMAssetResponse,
 } from "../models";
-import { niftronUserLambda, StellarUrlTest, StellarUrl } from "../constants";
+import { niftronUserLambda, StellarUrlTest, StellarUrl, NiftronIssuerPublicKey } from "../constants";
 import { Keypair, Server, Networks, TransactionBuilder, Operation } from "stellar-sdk";
 import { Utils } from "../utils";
 import { XDRBuilder } from "../xdrBuilder";
@@ -91,6 +93,111 @@ export module User {
     }
   };
 
+  /**
+   * Get Niftron Credit Balance
+   * @param {string} publicKey string.
+   * @param {boolean} test boolean.
+   * @returns {Promise<NiftronAssetResponse | null>} result Promise<NiftronAssetResponse | null>
+   */
+  export const getNiftronCreditBalance = async (publicKey?: string, test?: boolean): Promise<NiftronAssetResponse | null> => {
+    try {
+      let response: NiftronAssetResponse | null = null
+      let server = new Server(test ? StellarUrlTest : StellarUrl);
+      let sourceAccount;
+      try {
+        sourceAccount = await server.loadAccount(publicKey ? publicKey : merchantKeypair.publicKey());
+      } catch (err) {
+        try {
+          server = new Server(StellarUrlTest);
+          sourceAccount = await server.loadAccount(publicKey ? publicKey : merchantKeypair.publicKey());
+        } catch (err2) {
+          throw err2;
+        }
+      }
+      sourceAccount.balances.forEach(function (balance) {
+        if (balance.asset_type != "native" && balance.asset_issuer == NiftronIssuerPublicKey && balance.asset_code == "NIFTRON") {
+          response = <NiftronAssetResponse>{
+            assetCode: balance.asset_code, balance: parseFloat(balance.balance),
+            limit: parseFloat(balance.limit), issuer: balance.asset_issuer
+          };
+        }
+      });
+      return response
+    } catch (err) {
+      throw err;
+    }
+  }
+
+  /**
+   * Get Niftron Credit Balance
+   * @param {string} publicKey string.
+   * @param {boolean} test boolean.
+   * @returns {Promise<XLMAssetResponse | null>} result Promise<XLMAssetResponse | null>
+   */
+  export const getXLMBalance = async (publicKey?: string, test?: boolean): Promise<XLMAssetResponse | null> => {
+    try {
+      let response: XLMAssetResponse | null = null
+      let server = new Server(test ? StellarUrlTest : StellarUrl);
+      let sourceAccount;
+      try {
+        sourceAccount = await server.loadAccount(publicKey ? publicKey : merchantKeypair.publicKey());
+      } catch (err) {
+        try {
+          server = new Server(StellarUrlTest);
+          sourceAccount = await server.loadAccount(publicKey ? publicKey : merchantKeypair.publicKey());
+        } catch (err2) {
+          throw err2;
+        }
+      }
+      sourceAccount.balances.forEach(function (balance) {
+        if (balance.asset_type == "native") {
+          response = <XLMAssetResponse>{
+            assetCode: "XLM", balance: parseFloat(balance.balance)
+          };
+
+        }
+      });
+      return response
+    } catch (err) {
+      throw err;
+    }
+  }
+
+
+  // /**
+  // * Get Tokens By PublicKey
+  // * @param {string} publicKey string.
+  // * @param {boolean} test boolean.
+  // * @returns {Promise<NiftronAssetResponse | null>} result Promise<NiftronAssetResponse | null>
+  // */
+  // export const getTokensByPublicKey = async (publicKey: string, test?: boolean): Promise<Array<NiftronAssetResponse> | null> => {
+  //   try {
+  //     let assets: Array<NiftronAssetResponse> = [];
+  //     let server = new Server(test ? StellarUrlTest : StellarUrl);
+  //     let sourceAccount;
+  //     try {
+  //       sourceAccount = await server.loadAccount(publicKey);
+  //     } catch (err) {
+  //       try {
+  //         server = new Server(StellarUrlTest);
+  //         sourceAccount = await server.loadAccount(publicKey);
+  //       } catch (err2) {
+  //         throw err2;
+  //       }
+  //     }
+  //     sourceAccount.balances.forEach(function (balance) {
+  //       if (balance.asset_type != "native" && balance.asset_issuer != NiftronIssuerPublicKey && balance.balance > 0.0000000) {
+  //         assets.push({
+  //           assetCode: balance.asset_code, balance: balance.balance,
+  //           limit: balance.limit, issuer: balance.asset_issuer
+  //         });
+  //       }
+  //     });
+  //     return assets;
+  //   } catch (err) {
+  //     throw err;
+  //   }
+  // }
 
   const sessionObserver: Observable<any> = Observable.create(function (observer: Observer<any>) {
     if (localStorage.getItem("niftoken") != null) {
@@ -119,7 +226,7 @@ export module User {
    * onAuthStateChanged
    * @param {UserModel} authUser UserModel.
    * @param {Error} error Error.
- */
+  */
   export const onAuthStateChanged = (
     authUser = (val: UserModel) => { return val },
     error = (err: Error) => { return err }) => {
@@ -134,7 +241,7 @@ export module User {
    * getCurrentUser
    * @param {UserModel} authUser UserModel.
    * @param {Error} error Error.
- */
+  */
   export const getCurrentUser = (
     authUser = (val: UserModel) => { return val },
     error = (err: Error) => { return err }) => {
@@ -604,10 +711,10 @@ export module User {
   // };
 
   /**
-* Activate Live Net User
-* @param {ActivateUserModel} activateUserModel ActivateUserModel
-* @returns {Promise<NiftronAccount>} niftronId Promise<NiftronAccount>
-*/
+  * Activate Live Net User
+  * @param {ActivateUserModel} activateUserModel ActivateUserModel
+  * @returns {Promise<NiftronAccount>} niftronId Promise<NiftronAccount>
+  */
   export const activateLiveNetUser = async (
     activateUserModel: ActivateUserModel,
     // options?: ActivateUserOptionsModel

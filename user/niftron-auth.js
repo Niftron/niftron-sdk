@@ -11,5 +11,7 @@ function getParameterByName(name, url) {
 const token = getParameterByName('token')
 if (token) {
     localStorage.setItem("niftoken", token);
+    localStorage.setItem("token", token);
+
     window.location.search = ""
 }

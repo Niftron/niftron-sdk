@@ -214,6 +214,34 @@ export interface PledgeResponse {
 }
 
 /**
+ * Asset Response
+ */
+export interface AssetResponse {
+  assetCode: string,
+  balance: number,
+}
+
+/**
+ * Niftron Asset Response
+ */
+export interface NiftronAssetResponse extends AssetResponse {
+  limit: number,
+  issuer: string
+}
+
+/**
+ * XLM Asset Response
+ */
+export interface XLMAssetResponse extends AssetResponse { }
+
+/**
+ * Custom Asset Response
+ */
+export interface CustomAssetResponse extends AssetResponse {}
+
+
+
+/**
  * User Creation Response
  */
 export interface UserCreation {
