@@ -7,6 +7,7 @@ import {
   Certificate,
   Badge,
   GiftCard,
+  TokenId,
 } from "../models/niftronModels";
 export async function pledge(pledgeModel: any) {
   try {
@@ -66,7 +67,7 @@ export async function addBadge(badge: Badge) {
 }
 export async function addGiftCard(giftCard: GiftCard) {
   try {
-  
+
     let postBody = giftCard;
     const res = await axios.post(
       niftronTokenLambda + "/tokens/mint/giftcard",
@@ -117,6 +118,22 @@ export async function expressTransfer(transferModel: Transfer) {
     return null;
   }
 }
+export async function getTokenByIdList(idList: Array<TokenId>) {
+  try {
+    const res = await axios.post(`${niftronTokenLambda}/tokens/getData`, idList, {
+      headers: {
+        "Content-Type": "application/json"
+      }
+    });
+    if (res === null) {
+      return null
+    }
+    return res.data;
+  } catch (err) {
+    return null;
+  }
+}
+
 
 export async function trust(trustModel: any) {
   try {

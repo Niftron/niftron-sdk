@@ -45,13 +45,14 @@ export interface Token {
   transferable: boolean;
   category: string;
   assetCode: string;
+  assetAlias: string;
   assetIssuer: string;
   assetCount: number;
   previewUrl: string;
   ipfsHash: string;
   price: Number;
   xdr: string;
-  lastTxnHash: string;
+  // lastTxnHash: string;
 }
 
 /**
@@ -225,7 +226,6 @@ export interface AssetResponse {
  * Niftron Asset Response
  */
 export interface NiftronAssetResponse extends AssetResponse {
-  limit: number,
   issuer: string
 }
 
@@ -237,9 +237,12 @@ export interface XLMAssetResponse extends AssetResponse { }
 /**
  * Custom Asset Response
  */
-export interface CustomAssetResponse extends AssetResponse {}
+export interface CustomAssetResponse extends AssetResponse { }
 
-
+export interface TokenId {
+  id: string,
+  issuer: string,
+}
 
 /**
  * User Creation Response
