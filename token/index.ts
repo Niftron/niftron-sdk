@@ -28,6 +28,7 @@ import {
 } from "stellar-sdk";
 import { getAccountById, addCertificate, addBadge, addGiftCard, expressTransfer, trust } from "../api";
 import Web3 from 'web3';
+import { patternPK, patternSK, patternId } from "../constants";
 /**
  * TokenBuilder Class
  * @param {string} secretKey string.
@@ -46,7 +47,7 @@ export module TokenBuilder {
     merchantKeypair = Keypair.fromSecret(secretKey);
     projectPublicKey = projectKey;
   };
-  
+
   /**
    * Creates a new Certificate Token
    * @param {CreateCertificateModel} createCertificateModel CreateCertificateModel
@@ -75,6 +76,10 @@ export module TokenBuilder {
           ? options.authorizable
           : authorizable;
         encryptData = options.encryptData ? options.encryptData : encryptData;
+      }
+
+      if (createCertificateModel.creatorPublicKey != undefined && !patternPK.test(createCertificateModel.creatorPublicKey)) {
+        throw new Error("Invalid creator public key")
       }
 
       let creatorKeypair: Keypair = createCertificateModel.creatorKeypair != undefined ? createCertificateModel.creatorKeypair : merchantKeypair
@@ -209,6 +214,10 @@ export module TokenBuilder {
           ? options.authorizable
           : authorizable;
         encryptData = options.encryptData ? options.encryptData : encryptData;
+      }
+
+      if (createBadgeModel.creatorPublicKey != undefined && !patternPK.test(createBadgeModel.creatorPublicKey)) {
+        throw new Error("Invalid creator public key")
       }
 
       let creatorKeypair: NiftronKeypair = createBadgeModel.creatorKeypair != undefined ? createBadgeModel.creatorKeypair : merchantKeypair
@@ -348,6 +357,10 @@ export module TokenBuilder {
         encryptData = options.encryptData ? options.encryptData : encryptData;
       }
 
+      if (createGiftCardModel.creatorPublicKey != undefined && !patternPK.test(createGiftCardModel.creatorPublicKey)) {
+        throw new Error("Invalid creator public key")
+      }
+
       let creatorKeypair: NiftronKeypair = createGiftCardModel.creatorKeypair != undefined ? createGiftCardModel.creatorKeypair : merchantKeypair
 
       if (createGiftCardModel.creatorPublicKey != undefined && createGiftCardModel.creatorPublicKey != merchantKeypair.publicKey()) {
@@ -474,6 +487,25 @@ export module TokenBuilder {
     test?: boolean
   ): Promise<Transfer> => {
     try {
+      if (receiverPublicKey != undefined && !patternPK.test(receiverPublicKey)) {
+        throw new Error("Invalid receiver public key")
+      }
+
+      if (NiftronId != undefined && !patternId.test(NiftronId)) {
+        throw new Error("Invalid niftronId or asset code")
+      }
+
+      if (assetIssuer != undefined && !patternPK.test(assetIssuer)) {
+        throw new Error("Invalid asset issuer public key")
+      }
+
+      if (senderPublickey != undefined && !patternPK.test(senderPublickey)) {
+        throw new Error("Invalid sender public key")
+      }
+
+      if (senderSecretKey != undefined && !patternSK.test(senderSecretKey)) {
+        throw new Error("Invalid sender secret key")
+      }
 
       let senderKeypair: NiftronKeypair = senderSecretKey != undefined ? Keypair.fromSecret(senderSecretKey) : merchantKeypair
 
@@ -564,6 +596,21 @@ export module TokenBuilder {
     test?: boolean
   ): Promise<Transfer> => {
     try {
+      if (NiftronId != undefined && !patternId.test(NiftronId)) {
+        throw new Error("Invalid niftronId or asset code")
+      }
+
+      if (assetIssuer != undefined && !patternPK.test(assetIssuer)) {
+        throw new Error("Invalid asset issuer public key")
+      }
+
+      if (trusterPublickey != undefined && !patternPK.test(trusterPublickey)) {
+        throw new Error("Invalid truster public key")
+      }
+
+      if (trusterSecretKey != undefined && !patternSK.test(trusterSecretKey)) {
+        throw new Error("Invalid truster secret key")
+      }
 
       let keypair: NiftronKeypair = trusterSecretKey != undefined ? Keypair.fromSecret(trusterSecretKey) : merchantKeypair
       if (trusterPublickey != undefined && trusterPublickey != merchantKeypair.publicKey()) {

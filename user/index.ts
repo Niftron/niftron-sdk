@@ -24,12 +24,12 @@ import {
   TokenId,
   Token,
 } from "../models";
-import { niftronUserLambda, StellarUrlTest, StellarUrl, NiftronIssuerPublicKey } from "../constants";
+import { niftronUserLambda, StellarUrlTest, StellarUrl, NiftronIssuerPublicKey, patternPK, patternSK, patternId } from "../constants";
 import { Keypair, Server, Networks, TransactionBuilder, Operation } from "stellar-sdk";
 import { Utils } from "../utils";
 import { XDRBuilder } from "../xdrBuilder";
 import jwt from "jsonwebtoken";
-import { Observable, Observer } from 'rxjs';
+import { Observable, Observer, throwError } from 'rxjs';
 import { getAccountById, goLive, pledge, getTokenByIdList } from "../api";
 /**
  * User Class
@@ -39,6 +39,7 @@ export module User {
   let session: UserModel;
   let merchantKeypair: Keypair;
   let projectPublicKey: string | undefined;
+
 
   /**
       * initialize
@@ -103,6 +104,9 @@ export module User {
    */
   export const getNiftronCreditBalance = async (publicKey?: string, test?: boolean): Promise<NiftronAssetResponse | null> => {
     try {
+      if (publicKey != undefined && !patternPK.test(publicKey)) {
+        throw new Error("Invalid public key")
+      }
       let response: NiftronAssetResponse | null = null
       let server = new Server(test ? StellarUrlTest : StellarUrl);
       let sourceAccount;
@@ -138,6 +142,9 @@ export module User {
    */
   export const getXLMBalance = async (publicKey?: string, test?: boolean): Promise<XLMAssetResponse | null> => {
     try {
+      if (publicKey != undefined && !patternPK.test(publicKey)) {
+        throw new Error("Invalid public key")
+      }
       let response: XLMAssetResponse | null = null
       let server = new Server(test ? StellarUrlTest : StellarUrl);
       let sourceAccount;
@@ -174,6 +181,9 @@ export module User {
   */
   export const getTokensByPublicKey = async (publicKey?: string, test?: boolean): Promise<Array<Token> | null> => {
     try {
+      if (publicKey != undefined && !patternPK.test(publicKey)) {
+        throw new Error("Invalid public key")
+      }
       let assets: Array<NiftronAssetResponse> = [];
       let idList: Array<TokenId> = [];
       let tokenResponse: Array<Token> = [];
@@ -202,15 +212,20 @@ export module User {
           })
         }
       });
+      if (assets.length == 0) {
+        throw new Error("Token not found in blockchain")
+      }
 
       let result = await getTokenByIdList(idList)
       if (result == null) {
         throw new Error("Token data not found in Niftron")
       }
+      if (result.data && result.data.length == 0) {
+        throw new Error("Token data not found in Niftron")
+      }
       result.data.forEach((token: any) => {
         tokenResponse.push(<Token>token.data)
       });
-
       return tokenResponse;
     } catch (err) {
       throw err;

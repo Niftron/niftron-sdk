@@ -3,6 +3,7 @@ import { XDRBuilder } from "../xdrBuilder";
 import { TokenBuilder } from "../token";
 import { User } from "../user";
 import { NiftronConfig } from "../models";
+import { patternSK, patternPK } from "../constants";
 
 export class NIFTRON {
   private static isInitialized: boolean = false;
@@ -19,7 +20,7 @@ export class NIFTRON {
     if (niftronConfig.credential != undefined) {
       const niftronCredential: File = niftronConfig.credential;
       if (niftronCredential.type != "niftron") {
-        throw new Error("only .niftron credential files are accepted");
+        throw new Error("Only .niftron credential files are accepted");
       }
       const reader = new FileReader();
       reader.addEventListener("load", async () => {
@@ -46,8 +47,19 @@ export class NIFTRON {
     try {
       if (NIFTRON.secretKey == undefined) {
         throw new Error(
-          "please provide a secret key or .niftron credential file"
+          "Please provide a secret key or .niftron credential file"
         );
+      }
+      if (!patternSK.test(NIFTRON.secretKey)) {
+        throw new Error("Invalid secret key")
+      }
+      if (NIFTRON.projectKey == undefined) {
+        throw new Error(
+          "Please provide a project key"
+        );
+      }
+      if (!patternPK.test(NIFTRON.projectKey)) {
+        throw new Error("Invalid project key")
       }
       // if (NIFTRON.projectKey == null) {
       //   throw new Error(
@@ -70,11 +82,11 @@ export class NIFTRON {
     try {
       if (NIFTRON.secretKey == null) {
         throw new Error(
-          "please provide a secret key or .niftron credential file"
+          "Please provide a secret key or .niftron credential file"
         );
       }
       if (!NIFTRON.isInitialized) {
-        throw new Error("please initialize the config");
+        throw new Error("Please initialize the config");
       }
       return NIFTRON.secretKey;
     } catch (err) {
