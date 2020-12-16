@@ -16,6 +16,7 @@ import {
   CreateGiftCardOptionsModel,
   Transfer,
   NiftronKeypair,
+  SignerStatus,
 } from "../models";
 import { IpfsService } from "../ipfsService";
 import { XDRBuilder } from "../xdrBuilder";
@@ -26,7 +27,7 @@ import {
   Networks,
   AccountResponse,
 } from "stellar-sdk";
-import { getAccountById, addCertificate, addBadge, addGiftCard, expressTransfer, trust } from "../api";
+import { getAccountById, addCertificate, addBadge, addGiftCard, expressTransfer, trust, transfer, getTokenByIdList, getTokenById } from "../api";
 import Web3 from 'web3';
 import { patternPK, patternSK, patternId } from "../constants";
 /**
@@ -467,22 +468,22 @@ export module TokenBuilder {
 
 
   /**
-   * Express Transfer Token 
-   * @param {string} receiverPublicKey string.
-   * @param {string} NiftronId string.
-   * @param {string} assetIssuer string.
-   * @param {number} assetCount number.
-   * @param {string} senderPublickey string.
-   * @param {string} senderSecretKey string.
-   * @param {boolean} test boolean.
-   * @returns {string} niftronId string
-   */
-  export const expressTransferToken = async (
+ * Transfer Token 
+ * @param {string} receiverPublicKey string.
+ * @param {string} NiftronId string.
+ * @param {string} assetIssuer string.
+ * @param {number} assetCount number.
+ * @param {string} senderPublickey string.
+ * @param {string} senderSecretKey string.
+ * @param {boolean} test boolean.
+ * @returns {string} niftronId string
+ */
+  export const transferToken = async (
     receiverPublicKey: string,
     NiftronId: string,
     assetIssuer: string,
     assetCount: number,
-    senderPublickey: string,
+    senderPublicKey: string,
     senderSecretKey?: string,
     test?: boolean
   ): Promise<Transfer> => {
@@ -499,7 +500,7 @@ export module TokenBuilder {
         throw new Error("Invalid asset issuer public key")
       }
 
-      if (senderPublickey != undefined && !patternPK.test(senderPublickey)) {
+      if (senderPublicKey != undefined && !patternPK.test(senderPublicKey)) {
         throw new Error("Invalid sender public key")
       }
 
@@ -509,7 +510,134 @@ export module TokenBuilder {
 
       let senderKeypair: NiftronKeypair = senderSecretKey != undefined ? Keypair.fromSecret(senderSecretKey) : merchantKeypair
 
-      if (senderPublickey != undefined && senderPublickey != merchantKeypair.publicKey()) {
+      if (senderPublicKey != undefined && senderPublicKey != merchantKeypair.publicKey()) {
+        const secretKey = await approvalPopUp(test != undefined ? test : false)
+        if (secretKey == null) {
+          throw new Error("Sender account did not approve the transaction");
+        }
+        senderKeypair = Keypair.fromSecret(secretKey)
+      }
+
+      let xdr;
+      let rejectXdr;
+
+      try {
+        const { xdrs } = await XDRBuilder.transferBadge(
+          senderPublicKey,
+          receiverPublicKey,
+          assetIssuer,
+          NiftronId,
+          assetCount,
+        )
+        if (xdrs != null && xdrs.length > 0) {
+          await Promise.all(
+            xdrs.map(async (item: any, index: number) => {
+              xdrs[index].xdr = await XDRBuilder.signXDR(item.xdr, senderKeypair.secret());
+              if (senderPublicKey !== merchantKeypair.publicKey()) {
+                xdrs[index].xdr = await XDRBuilder.signXDR(xdrs[index].xdr, merchantKeypair.secret());
+              }
+            })
+          );
+          xdr = xdrs[0]?.xdr
+          rejectXdr = xdrs[1]?.xdr
+
+        }
+      } catch (e) {
+        throw e
+      }
+
+      //in testnet (should add check to change)
+      let parsedTx: Transaction = new Transaction(xdr, Networks.TESTNET);
+      // let parsedRejectTx: Transaction = new Transaction(rejectXdr, Networks.TESTNET);
+
+      let txnHash = parsedTx.hash().toString("hex");
+      // let txnHash = parsedTx.hash().toString("hex");
+      const tokenRes = await getTokenById(NiftronId);
+      if (tokenRes == null) {
+        throw new Error("Token not found");
+      }
+
+      const transferModel: Transfer = {
+        transferType: "0",
+        sender: senderPublicKey,
+        receiver: receiverPublicKey,
+        assetCode: NiftronId,
+        assetIssuer,
+        assetCount,
+        tokenName: tokenRes.data.tokenName,
+        previewUrl: tokenRes.data.previewUrl,
+        xdr,
+        rejectXdr,
+        signers: [{
+          publicKey: senderPublicKey,
+          status: SignerStatus.ACCEPTED
+        }        ]
+      };
+      const serverRes = await transfer(transferModel);
+      if (serverRes == null) {
+        throw new Error("Failed to submit expressTransfer to NIFTRON");
+      }
+      switch (serverRes) {
+        case 200: transferModel.txnHash = txnHash
+          return transferModel;
+        case 201:
+          throw new Error("Account not found in niftron");
+        case 202:
+          throw new Error("Token not found");
+        case 400:
+          throw new Error("Failed to submit transfer to NIFTRON");
+        default:
+          throw new Error("Failed to submit transfer to NIFTRON");
+      }
+    } catch (err) {
+      throw err;
+    }
+  };
+
+  /**
+   * Express Transfer Token 
+   * @param {string} receiverPublicKey string.
+   * @param {string} NiftronId string.
+   * @param {string} assetIssuer string.
+   * @param {number} assetCount number.
+   * @param {string} senderPublickey string.
+   * @param {string} senderSecretKey string.
+   * @param {boolean} test boolean.
+   * @returns {string} niftronId string
+   */
+  export const expressTransferToken = async (
+    receiverPublicKey: string,
+    NiftronId: string,
+    assetIssuer: string,
+    assetCount: number,
+    senderPublicKey: string,
+    senderSecretKey?: string,
+    test?: boolean
+  ): Promise<Transfer> => {
+    try {
+      if (receiverPublicKey != undefined && !patternPK.test(receiverPublicKey)) {
+        throw new Error("Invalid receiver public key")
+      }
+
+      if (NiftronId != undefined && !patternId.test(NiftronId)) {
+        throw new Error("Invalid niftronId or asset code")
+      }
+
+      if (assetIssuer != undefined && !patternPK.test(assetIssuer)) {
+        throw new Error("Invalid asset issuer public key")
+      }
+
+      if (senderPublicKey != undefined && !patternPK.test(senderPublicKey)) {
+        throw new Error("Invalid sender public key")
+      }
+
+      if (senderSecretKey != undefined && !patternSK.test(senderSecretKey)) {
+        throw new Error("Invalid sender secret key")
+      }
+
+      let senderKeypair: NiftronKeypair = senderSecretKey != undefined ? Keypair.fromSecret(senderSecretKey) : merchantKeypair
+
+      if (senderPublicKey != undefined && senderPublicKey != merchantKeypair.publicKey()) {
         const secretKey = await approvalPopUp(test != undefined ? test : false)
         if (secretKey == null) {
           throw new Error("Sender account did not approve the transaction");
@@ -520,7 +648,7 @@ export module TokenBuilder {
       let xdr;
       try {
         const { xdrs } = await XDRBuilder.expressTransfer(
-          senderPublickey,
+          senderPublicKey,
           receiverPublicKey,
           assetIssuer,
           NiftronId,
@@ -530,7 +658,7 @@ export module TokenBuilder {
           await Promise.all(
             xdrs.map(async (item: any, index: number) => {
               xdrs[index].xdr = await XDRBuilder.signXDR(item.xdr, senderKeypair.secret());
-              if (senderPublickey !== merchantKeypair.publicKey()) {
+              if (senderPublicKey !== merchantKeypair.publicKey()) {
                 xdrs[index].xdr = await XDRBuilder.signXDR(xdrs[index].xdr, merchantKeypair.secret());
               }
             })
@@ -547,7 +675,7 @@ export module TokenBuilder {
 
       const expressT: Transfer = {
         transferType: "0",
-        sender: senderPublickey,
+        sender: senderPublicKey,
         receiver: receiverPublicKey,
         assetCode: NiftronId,
         assetIssuer,

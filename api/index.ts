@@ -133,7 +133,21 @@ export async function getTokenByIdList(idList: Array<TokenId>) {
     return null;
   }
 }
-
+export async function getTokenById(id: string) {
+  try {
+    const res = await axios.get(`${niftronTokenLambda}/tokens/${id}`, {
+      headers: {
+        "Content-Type": "application/json"
+      }
+    });
+    if (res === null) {
+      return null
+    }
+    return res.data;
+  } catch (err) {
+    return null;
+  }
+}
 
 export async function trust(trustModel: any) {
   try {

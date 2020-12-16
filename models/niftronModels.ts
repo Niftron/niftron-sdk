@@ -137,8 +137,10 @@ export interface Transfer {
   assetCode: string;
   assetIssuer: string;
   assetCount: Number;
+  tokenName?: string;
   previewUrl?: string;
   xdr: string;
+  rejectXdr?: string;
   signers?: Array<signer>;
   lastProofHash?: string;
   txnHash?: string;

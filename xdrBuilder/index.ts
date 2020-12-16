@@ -312,10 +312,10 @@ export module XDRBuilder {
     receiver: string,
     assetIssuer: string,
     assetCode: string,
-    assetCount: string,
-    approvers: Array<string>,
-    minTime: Date,
-    maxTime: Date
+    assetCount: number,
+    approvers?: Array<string>,
+    minTime?: Date,
+    maxTime?: Date
   ): Promise<any> => {
     try {
       let postBody = {
