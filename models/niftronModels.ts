@@ -306,6 +306,8 @@ export interface LowPrivacyAccountResponse extends AccountResponse { }
 export interface NiftronConfig {
   secretKey?: string;
   projectKey?: string;
+  projectIssuer?: string;
+
   credential?: NiftronCredential;
 }
 

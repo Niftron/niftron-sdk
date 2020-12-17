@@ -9,6 +9,8 @@ export class NIFTRON {
   private static isInitialized: boolean = false;
   private static secretKey: string | undefined = undefined;
   private static projectKey: string | undefined = undefined;
+  private static projectIssuer: string | undefined = undefined;
+
 
   constructor(niftronConfig: NiftronConfig) {
     if (niftronConfig.secretKey != undefined) {
@@ -16,6 +18,9 @@ export class NIFTRON {
     }
     if (niftronConfig.projectKey != undefined) {
       NIFTRON.projectKey = niftronConfig.projectKey;
+    }
+    if (niftronConfig.projectIssuer != undefined) {
+      NIFTRON.projectIssuer = niftronConfig.projectIssuer;
     }
     if (niftronConfig.credential != undefined) {
       const niftronCredential: File = niftronConfig.credential;

@@ -27,7 +27,7 @@ import {
   Networks,
   AccountResponse,
 } from "stellar-sdk";
-import { getAccountById, addCertificate, addBadge, addGiftCard, expressTransfer, trust, transfer, getTokenByIdList, getTokenById } from "../api";
+import { getAccountById, addCertificate, addBadge, addGiftCard, expressTransfer, trust, transfer, getTokenByIdList, getTokenById, getProjectByPublicKey } from "../api";
 import Web3 from 'web3';
 import { patternPK, patternSK, patternId } from "../constants";
 /**
@@ -38,15 +38,17 @@ import { patternPK, patternSK, patternId } from "../constants";
 export module TokenBuilder {
   let merchantKeypair: Keypair;
   let projectPublicKey: string | undefined;
+  let projectIssuerKey: string | undefined;
 
   /**
       * initialize
       * @param {string} secretKey string.
       * @param {string} projectKey string.
       */
-  export const initialize = (secretKey: string, projectKey?: string) => {
+  export const initialize = (secretKey: string, projectKey?: string, projectIssuer?: string) => {
     merchantKeypair = Keypair.fromSecret(secretKey);
     projectPublicKey = projectKey;
+    projectIssuerKey = projectIssuer;
   };
 
   /**
@@ -250,6 +252,15 @@ export module TokenBuilder {
         }
       });
 
+      if (projectPublicKey) {
+        const project = await getProjectByPublicKey(projectPublicKey);
+        if (project == null) {
+          throw new Error("Project not found in niftron");
+        }
+        IssuerPublicKey = project.projectIssuer.publicKey;
+        IssuerAlias = project.name;
+      }
+
       let previewUrl = createBadgeModel.previewImageBase64 != undefined ?
         createBadgeModel.previewImageBase64 : createBadgeModel.previewImageUrl;
 
@@ -298,8 +309,6 @@ export module TokenBuilder {
         price: tokenCost,
         xdr,
       };
-
-      console.log("OK so far 5")
 
       const serverRes = await addBadge(badge);
       if (serverRes == null) {
@@ -571,7 +580,7 @@ export module TokenBuilder {
         signers: [{
           publicKey: senderPublicKey,
           status: SignerStatus.ACCEPTED
-        }        ]
+        }]
       };
       const serverRes = await transfer(transferModel);
       if (serverRes == null) {

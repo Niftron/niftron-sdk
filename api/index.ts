@@ -335,7 +335,27 @@ export async function getAccountById(id: string) {
   }
 }
 
+export async function getProjectByPublicKey(publicKey: string) {
+  try {
+    const res = await axios.get(`${niftronUserLambda}/projects/${publicKey}`, {
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
 
+    if (res != null) {
+      if (res.status === 200) {
+        return res.data.data;
+      } else {
+        return res.data.data;
+      }
+    } else {
+      return null;
+    }
+  } catch (error) {
+    return null;
+  }
+}
 
 export async function activate(
   userPublicKey: string,

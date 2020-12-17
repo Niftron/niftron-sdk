@@ -39,18 +39,18 @@ export module User {
   let session: UserModel;
   let merchantKeypair: Keypair;
   let projectPublicKey: string | undefined;
-
+  let projectIssuerKey: string | undefined;
 
   /**
       * initialize
       * @param {string} secretKey string.
       * @param {string} projectKey string.
       */
-  export const initialize = (secretKey: string, projectKey?: string) => {
+  export const initialize = (secretKey: string, projectKey?: string, projectIssuer?: string) => {
     merchantKeypair = Keypair.fromSecret(secretKey);
     projectPublicKey = projectKey;
+    projectIssuerKey = projectIssuer;
   };
-
   /**
   * Test Transfer - Sends a minimum of 2 NIFTRONS to Niftron Distributor
   * @param {PledgeModel} options PledgeModel.
