@@ -1,0 +1,35 @@
+{
+  "name": "niftron-sdk",
+  "version": "2.2.1",
+  "description": "Niftron JS SDK",
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
+  "scripts": {
+    "prepare":"npm run build",
+    "build": "tsc",
+    "docs": "npx typedoc --excludePrivate --excludeNotExported --excludeProtected --excludeExternals"
+  },
+  "author": "zeemzo",
+  "license": "MIT",
+  "devDependencies": {
+    "typedoc": "^0.19.2",
+    "typedoc-twilio-theme": "^1.0.1",
+    "typescript": "3.9.7"
+  },
+  "dependencies": {
+    "@types/crypto-js": "4.0.1",
+    "@types/ed2curve": "0.2.2",
+    "@types/jsonwebtoken": "8.5.0",
+    "@types/sha256": "0.2.0",
+    "axios": "0.21.0",
+    "crypto-js": "4.0.0",
+    "ed2curve": "0.3.0",
+    "jsonwebtoken": "8.5.1",
+    "rxjs": "6.6.3",
+    "sha256": "0.2.0",
+    "stellar-base": "3.0.3",
+    "stellar-sdk": "5.0.3",
+    "tweetnacl-util": "0.15.1",
+    "tweetnacl-zeemzo": "1.0.5"
+  }
+}

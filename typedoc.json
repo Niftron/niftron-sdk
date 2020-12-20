@@ -1,0 +1,9 @@
+{
+    "name":"Niftron SDK",
+    "out": "docs",
+    "theme": "minimal",
+    "inputFiles": [
+        "./src"
+    ],
+    "mode": "file"
+}
