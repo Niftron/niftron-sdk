@@ -5,6 +5,7 @@ import {
   StellarUrlTest,
   StellarUrl,
   PatternSK,
+  PatternPK,
 } from "../constants";
 import { Server, Networks, Keypair, Transaction } from "stellar-sdk";
 import axios from "axios";
@@ -35,7 +36,7 @@ export module XDRBuilder {
         "Please provide a project key"
       );
     }
-    if (!PatternSK.test(niftronConfig.projectKey)) {
+    if (!PatternPK.test(niftronConfig.projectKey)) {
       throw new Error("Invalid project key")
     }
     merchantKeypair = Keypair.fromSecret(niftronConfig.secretKey);

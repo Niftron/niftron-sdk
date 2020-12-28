@@ -1,11 +1,11 @@
 {
   "name": "niftron-sdk",
-  "version": "2.2.1",
+  "version": "2.2.2",
   "description": "Niftron JS SDK",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
   "scripts": {
-    "prepare":"npm run build",
+    "prepare": "npm run build",
     "build": "tsc",
     "docs": "npx typedoc --excludePrivate --excludeNotExported --excludeProtected --excludeExternals"
   },
