@@ -14,16 +14,23 @@ export interface NiftronId {
 export enum TokenType {
   NFT = "NFT",
   SFT = "SFT",
+  ERC20 = "ERC20",
+  ERC721 = "ERC721",
+  ERC777 = "ERC777",
+  ERC1155 = "ERC1155",
 }
 /**
- * Token Category Interface
+ * Token Category Inteface
  */
 export enum TokenCategory {
   CERTIFICATE = "CERTIFICATE",
-  BADGE = "BADGE",
   DIGITALART = "DIGITALART",
   TICKET = "TICKET",
+  BADGE = "BADGE",
+  RECORD = "RECORD",
   GIFTCARD = "GIFTCARD",
+  GIFTCARDPREMIUM = "GIFTCARDPREMIUM",
+  TOKEN = "TOKEN",
 }
 /**
  * Token Realm Interface
@@ -32,7 +39,6 @@ export enum TokenRealm {
   DIGITAL = "DIGITAL",
   PHYSICAL = "PHYSICAL",
 }
-
 
 /**
  * Pledge Interface
@@ -48,20 +54,23 @@ export interface Pledge {
 export interface Token {
   _id?: string;
   tokenName: string;
-  tokenType: string;
+  tokenType?: string;
   assetRealm: string;
   tradable: boolean;
   transferable: boolean;
-  category: string;
-  assetCode: string;
-  assetAlias: string;
+  category?: string;
+  assetCode?: string;
   assetIssuer: string;
+  issuerAlias: string;
   assetCount: number;
   previewUrl: string;
-  ipfsHash: string;
-  price: Number;
-  xdr: string;
-  // lastTxnHash: string;
+  isUrl: boolean;
+  ipfsHash?: string;
+  price?: Number;
+  xdr?: string;
+  txnHash?: string;
+  contract?: string;
+  contractId?: string;
 }
 
 /**
@@ -81,11 +90,10 @@ export interface Certificate {
   assetCount: number;
   previewUrl: string;
   isUrl: boolean;
-
   ipfsHash?: string;
   price?: Number;
   xdr?: string;
-  lastTxnHash?: string;
+  txnHash?: string;
 }
 
 /**
@@ -102,15 +110,13 @@ export interface Badge {
   assetCode?: string;
   assetIssuer?: string;
   issuerAlias: string;
-
   assetCount: number;
   previewUrl: string;
   isUrl: boolean;
-
   ipfsHash?: string;
   price?: Number;
   xdr?: string;
-  lastTxnHash?: string;
+  txnHash?: string;
 }
 
 /**
@@ -133,7 +139,7 @@ export interface GiftCard {
   ipfsHash?: string;
   price?: Number;
   xdr?: string;
-  lastTxnHash?: string;
+  txnHash?: string;
 }
 /**
  * Transfer Interface
@@ -188,7 +194,7 @@ export interface RejectApproval {
 /**
  * NiftronCredential Interface
  */
-export interface NiftronCredential extends File { }
+export interface NiftronCredential extends File {}
 /**
  * User Type Interface
  */
@@ -224,30 +230,30 @@ export interface PledgeResponse {
  * Asset Response
  */
 export interface AssetResponse {
-  assetCode: string,
-  balance: number,
+  assetCode: string;
+  balance: number;
 }
 
 /**
  * Niftron Asset Response
  */
 export interface NiftronAssetResponse extends AssetResponse {
-  issuer: string
+  issuer: string;
 }
 
 /**
  * XLM Asset Response
  */
-export interface XLMAssetResponse extends AssetResponse { }
+export interface XLMAssetResponse extends AssetResponse {}
 
 /**
  * Custom Asset Response
  */
-export interface CustomAssetResponse extends AssetResponse { }
+export interface CustomAssetResponse extends AssetResponse {}
 
 export interface TokenId {
-  id: string,
-  issuer: string,
+  id: string;
+  issuer: string;
 }
 
 /**
@@ -261,7 +267,7 @@ export interface UserCreation {
 /**
  * High Privacy User Creation
  */
-export interface HighPrivacyUserCreation extends UserCreation { }
+export interface HighPrivacyUserCreation extends UserCreation {}
 
 /**
  * Medium Privacy User Creation
@@ -292,17 +298,17 @@ export interface AccountResponse {
 /**
  * High Privacy Account Creation Response
  */
-export interface HighPrivacyAccountResponse extends AccountResponse { }
+export interface HighPrivacyAccountResponse extends AccountResponse {}
 
 /**
  * Medium Privacy Account Creation Response
  */
-export interface MediumPrivacyAccountResponse extends AccountResponse { }
+export interface MediumPrivacyAccountResponse extends AccountResponse {}
 
 /**
  * Low Privacy Account Creation Response
  */
-export interface LowPrivacyAccountResponse extends AccountResponse { }
+export interface LowPrivacyAccountResponse extends AccountResponse {}
 
 /**
  * Niftron Config
@@ -316,17 +322,17 @@ export interface NiftronConfig {
 /**
  * Niftron Base64String for Images
  */
-export interface Base64String extends String { }
+export interface Base64String extends String {}
 
 /**
  * Niftron Base64String for Images
  */
-export class Base64String extends String { }
+export class Base64String extends String {}
 
 /**
  * Niftron Keypair
  */
-export class NiftronKeypair extends Keypair { }
+export class NiftronKeypair extends Keypair {}
 
 /**
  * Niftron Account
@@ -353,6 +359,9 @@ export interface NiftronAccount {
 export interface NiftronAccountList {
   publicKey: string;
   accountType: string;
+  blockchain?: string;
+  encryptedSecret?: string;
+
 }
 
 /**
@@ -365,9 +374,21 @@ export interface CreateTokenModel {
   tokenCount: number;
   tokenCost?: number;
   previewImageBase64?: string;
-  previewImageUrl: string;
+  previewImageUrl?: string;
   creatorPublicKey?: string;
   creatorKeypair?: NiftronKeypair;
+  blockchain?: Blockchain;
+  contract?: any;
+  contractId?: string;
+}
+
+/**
+ * Blockchain Type Inteface
+ */
+export enum Blockchain {
+  STELLAR = "STELLAR",
+  ETHEREUM = "ETHEREUM",
+  // NEO = "NEO"
 }
 
 /**
@@ -383,31 +404,31 @@ export interface CreateTokenOptionsModel {
 /**
  * Create Certificate Model
  */
-export interface CreateCertificateModel extends CreateTokenModel { }
+export interface CreateCertificateModel extends CreateTokenModel {}
 
 /**
  * Create Certificate Options Model
  */
-export interface CreateCertificateOptionsModel extends CreateTokenOptionsModel { }
+export interface CreateCertificateOptionsModel
+  extends CreateTokenOptionsModel {}
 
 /**
  * Create Badge Model
  */
-export interface CreateBadgeModel extends CreateTokenModel { }
+export interface CreateBadgeModel extends CreateTokenModel {}
 /**
  * Create Badge Options Model
  */
-export interface CreateBadgeOptionsModel extends CreateTokenOptionsModel { }
-
+export interface CreateBadgeOptionsModel extends CreateTokenOptionsModel {}
 
 /**
  * Create GiftCard Model
  */
-export interface CreateGiftCardModel extends CreateTokenModel { }
+export interface CreateGiftCardModel extends CreateTokenModel {}
 /**
  * Create GiftCard Options Model
  */
-export interface CreateGiftCardOptionsModel extends CreateTokenOptionsModel { }
+export interface CreateGiftCardOptionsModel extends CreateTokenOptionsModel {}
 
 /**
  * Activate User Model

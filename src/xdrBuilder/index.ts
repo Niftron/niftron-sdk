@@ -6,6 +6,7 @@ import {
   StellarUrl,
   PatternSK,
   PatternPK,
+  NiftronAPI,
 } from "../constants";
 import { Server, Networks, Keypair, Transaction } from "stellar-sdk";
 import axios from "axios";
@@ -96,7 +97,7 @@ export module XDRBuilder {
         amount
       };
       const res = await axios.post(
-        NiftronUserLambda + "/xdrBuilder/pledge",
+        NiftronAPI + "/xdrs/pledge",
         postBody,
         {
           headers: {
@@ -128,7 +129,7 @@ export module XDRBuilder {
         merchantPublicKey: projectPublicKey ? projectPublicKey : merchantKeypair.publicKey(),
       };
       const res = await axios.post(
-        NiftronUserLambda + "/xdrBuilder/register",
+        NiftronAPI + "/xdrs/register",
         postBody,
         {
           headers: {
@@ -150,6 +151,59 @@ export module XDRBuilder {
     }
   };
 
+   /**
+   * Build Mint Token XDR
+   * @param {string} tokenName string
+   * @param {string} tokenType string
+   * @param {boolean} tradable boolean
+   * @param {boolean} transferable boolean
+   * @param {boolean} authorizable boolean
+   * @param {string} creator string
+   * @param {number} assetCount number
+   * @param {string} dataHash string
+   * @returns {XDRBuilderResponse} builderResponse XDRBuilderResponse
+   */
+  export async function mintToken(
+    tokenName: string,
+    tokenType: string,
+    tradable: boolean,
+    transferable: boolean,
+    authorizable: boolean,
+    creator: string,
+    assetCount: number,
+    dataHash: string
+  ): Promise<XDRBuilderResponse> {
+    try {
+      let postBody = {
+        tokenName,
+        tokenType,
+        tradable,
+        transferable,
+        authorizable,
+        primaryPublicKey: creator,
+        merchantPublicKey: projectPublicKey ? projectPublicKey : merchantKeypair.publicKey(),
+        assetCount: assetCount,
+        dataHash: dataHash,
+      };
+      const res = await axios.post(
+        NiftronAPI + "/xdrs/mint/token",
+        postBody,
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      if (res === null) {
+        throw Error("failed to build mint token xdr");
+      }
+      const xdrs = res.data.data;
+      const niftronId = res.data.metaData?.niftronId;
+      return { xdrs, niftronId };
+    } catch (err) {
+      throw err;
+    }
+  };
 
   /**
    * Build Mint Certificate XDR
@@ -186,7 +240,7 @@ export module XDRBuilder {
         dataHash: dataHash,
       };
       const res = await axios.post(
-        NiftronTokenLambda + "/xdrBuilder/mint/certificate",
+        NiftronAPI + "/xdrs/mint/certificate",
         postBody,
         {
           headers: {
@@ -239,7 +293,7 @@ export module XDRBuilder {
         maxTime,
       };
       const res = await axios.post(
-        NiftronTokenLambda + "/xdrBuilder/transfer/certificate",
+        NiftronAPI + "/xdrs/transfer/certificate",
         postBody,
         {
           headers: {
@@ -296,7 +350,7 @@ export module XDRBuilder {
         dataHash: dataHash,
       };
       const res = await axios.post(
-        NiftronTokenLambda + "/xdrBuilder/mint/badge",
+        NiftronAPI + "/xdrs/mint/badge",
         postBody,
         {
           headers: {
@@ -349,7 +403,7 @@ export module XDRBuilder {
         maxTime,
       };
       const res = await axios.post(
-        NiftronTokenLambda + "/xdrBuilder/transfer/badge",
+        NiftronAPI + "/xdrs/transfer/badge",
         postBody,
         {
           headers: {
@@ -405,7 +459,7 @@ export module XDRBuilder {
         dataHash: dataHash,
       };
       const res = await axios.post(
-        NiftronTokenLambda + "/xdrBuilder/mint/giftcard",
+        NiftronAPI + "/xdrs/mint/giftcard",
         postBody,
         {
           headers: {
@@ -458,7 +512,7 @@ export module XDRBuilder {
         maxTime,
       };
       const res = await axios.post(
-        NiftronTokenLambda + "/xdrBuilder/transfer/giftcard",
+        NiftronAPI + "/xdrs/transfer/giftcard",
         postBody,
         {
           headers: {
@@ -496,7 +550,7 @@ export module XDRBuilder {
         merchantPublicKey
       };
       const res = await axios.post(
-        NiftronUserLambda + "/xdrBuilder/goLive",
+        NiftronAPI + "/xdrs/goLive",
         postBody,
         {
           headers: {
@@ -543,7 +597,7 @@ export module XDRBuilder {
         merchantPublicKey
       };
       const res = await axios.post(
-        NiftronUserLambda + "/xdrBuilder/activate",
+        NiftronAPI + "/xdrs/activate",
         postBody,
         {
           headers: {
@@ -602,7 +656,7 @@ export module XDRBuilder {
         assetCount
       };
       const res = await axios.post(
-        NiftronTokenLambda + "/xdrBuilder/expressTransfer/token",
+        NiftronAPI + "/xdrs/expressTransfer/token",
         postBody,
         {
           headers: {
@@ -644,7 +698,7 @@ export module XDRBuilder {
         assetCode
       };
       const res = await axios.post(
-        NiftronTokenLambda + "/xdrBuilder/trust",
+        NiftronAPI + "/xdrs/trust",
         postBody,
         {
           headers: {

@@ -144,6 +144,51 @@ export module User {
   };
 
   /**
+  * popUpAuth
+  */
+  export async function popUpAuth(): Promise<string | null> {
+    return new Promise((resolve) => {
+      const url =
+        "https://account.niftron.com/" +
+        "?serviceType=1" +
+        "&projectKey=" +
+        projectPublicKey +
+        // "&xdr=" + xdr +
+        "&origin=" +
+        window.location.href;
+      const title = "";
+      const width = 720;
+      const height = 720;
+      var left = window.screen.width / 2 - width / 2;
+      var top = window.screen.height / 2 - height / 2;
+      var options = "";
+
+      options += "toolbar=no,location=no,directories=no,status=no";
+      options += ",menubar=no,scrollbars=no,resizable=no,copyhistory=no";
+
+      options += ",width=" + width;
+      options += ",height=" + height;
+      options += ",top=" + top;
+      options += ",left=" + left;
+
+      const MyWindow = window.open(url, title, options);
+      const messageEvent = (event: any) => {
+        if (event.origin !== "https://account.niftron.com") return;
+        window.removeEventListener("message", messageEvent);
+        localStorage.setItem("niftoken",event.data)
+        resolve(event.data);
+      };
+      window.addEventListener("message", messageEvent, false);
+      if (MyWindow != null && MyWindow.closed) {
+        resolve(null);
+      }
+    });
+  }
+
+
+
+
+  /**
    * register niftron user
    * @param {UserType} type UserType.
    * @param {string} alias string.

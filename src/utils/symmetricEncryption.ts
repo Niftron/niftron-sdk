@@ -1,8 +1,9 @@
-import nacl from "tweetnacl-zeemzo";
-import naclUtil from "tweetnacl-util";
-import { convertPublicKey, convertSecretKey } from "ed2curve";
-import { StrKey } from "stellar-base";
-import { Keypair } from "stellar-sdk";
+// import nacl from "tweetnacl-zeemzo";
+// import naclUtil from "tweetnacl-util";
+// import { convertPublicKey, convertSecretKey } from "ed2curve";
+// import { StrKey } from "stellar-base";
+// import { Keypair } from "stellar-sdk";
+import CryptoJS from "crypto-js";
 
 export class SymmetricEncryption {
   public static decrypt = (secret: string, signer: string) => {

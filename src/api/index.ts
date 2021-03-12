@@ -1,5 +1,5 @@
 import axios from "axios";
-import { NiftronTokenLambda, NiftronUserLambda } from "../constants";
+import { NiftronAPI, NiftronUserLambda } from "../constants";
 import {
   Transfer,
   AcceptApproval,
@@ -11,6 +11,30 @@ import {
   Pledge,
   Token,
 } from "../models/niftronModels";
+/**
+ * @param {Badge} badge Badge.
+ * @return {number|null} 
+ */
+export async function addToken(badge: Badge) {
+  try {
+    let postBody = badge;
+    const res = await axios.post(
+      NiftronAPI + "/tokens/mint/token",
+      postBody,
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    if (res == null) {
+      return null;
+    }
+    return res.status;
+  } catch (err) {
+    return null;
+  }
+}
 /**
  * @param {Pledge} pledgeModel Pledge.
  * @return {number|null} 
@@ -39,7 +63,7 @@ export async function addCertificate(certificate: Certificate) {
   try {
     let postBody = certificate;
     const res = await axios.post(
-      NiftronTokenLambda + "/tokens/mint/certificate",
+      NiftronAPI + "/tokens/mint/certificate",
       postBody,
       {
         headers: {
@@ -63,7 +87,7 @@ export async function addBadge(badge: Badge) {
   try {
     let postBody = badge;
     const res = await axios.post(
-      NiftronTokenLambda + "/tokens/mint/badge",
+      NiftronAPI + "/tokens/mint/badge",
       postBody,
       {
         headers: {
@@ -88,7 +112,7 @@ export async function addGiftCard(giftCard: GiftCard) {
 
     let postBody = giftCard;
     const res = await axios.post(
-      NiftronTokenLambda + "/tokens/mint/giftcard",
+      NiftronAPI + "/tokens/mint/giftcard",
       postBody,
       {
         headers: {
@@ -111,7 +135,7 @@ export async function addGiftCard(giftCard: GiftCard) {
 export async function transfer(transferModel: Transfer) {
   try {
     let postBody = transferModel;
-    const res = await axios.post(NiftronTokenLambda + "/transfers", postBody, {
+    const res = await axios.post(NiftronAPI + "/transactions/transfers", postBody, {
       headers: {
         "Content-Type": "application/json",
       },
@@ -131,7 +155,7 @@ export async function transfer(transferModel: Transfer) {
 export async function expressTransfer(transferModel: Transfer) {
   try {
     let postBody = transferModel;
-    const res = await axios.post(NiftronTokenLambda + "/expressTransfer", postBody, {
+    const res = await axios.post(NiftronAPI + "/transactions/expressTransfer", postBody, {
       headers: {
         "Content-Type": "application/json",
       },
@@ -149,7 +173,7 @@ export async function expressTransfer(transferModel: Transfer) {
  */
 export async function getTokenByIdList(idList: Array<TokenId>) {
   try {
-    const res = await axios.post(`${NiftronTokenLambda}/tokens/getData`, idList, {
+    const res = await axios.post(`${NiftronAPI}/tokens/getData`, idList, {
       headers: {
         "Content-Type": "application/json"
       }
@@ -167,7 +191,7 @@ export async function getTokenByIdList(idList: Array<TokenId>) {
  */
 export async function getTokenById(id: string) {
   try {
-    const res = await axios.get(`${NiftronTokenLambda}/tokens/${id}`, {
+    const res = await axios.get(`${NiftronAPI}/tokens/${id}`, {
       headers: {
         "Content-Type": "application/json"
       }
@@ -184,7 +208,7 @@ export async function getTokenById(id: string) {
 export async function trust(trustModel: any) {
   try {
     let postBody = trustModel;
-    const res = await axios.post(NiftronTokenLambda + "/trust", postBody, {
+    const res = await axios.post(NiftronAPI + "/trust", postBody, {
       headers: {
         "Content-Type": "application/json",
       },
@@ -200,7 +224,7 @@ export async function trust(trustModel: any) {
 export async function submitTransfer(transferModel: Transfer) {
   try {
     let postBody = transferModel;
-    const res = await axios.post(NiftronTokenLambda + "/transfers/submit", postBody, {
+    const res = await axios.post(NiftronAPI + "/transactions/transfers/submit", postBody, {
       headers: {
         "Content-Type": "application/json",
       },
@@ -215,7 +239,7 @@ export async function submitTransfer(transferModel: Transfer) {
 }
 export async function getTransferById(id: string) {
   try {
-    const res = await axios.get(`${NiftronTokenLambda}/transfers/${id}`, {
+    const res = await axios.get(`${NiftronAPI}/transactions/transfers/${id}`, {
       headers: {
         "Content-Type": "application/json",
       },
@@ -232,7 +256,7 @@ export async function acceptApprovals(id: string, approval: AcceptApproval) {
   try {
     let postBody: AcceptApproval = approval;
     const res = await axios.post(
-      `${NiftronTokenLambda}/approvals/${id}/accept`,
+      `${NiftronAPI}/transactions/approvals/${id}/accept`,
       postBody,
       {
         headers: {
@@ -254,7 +278,7 @@ export async function rejectApprovals(id: string, reject: RejectApproval) {
     let postBody: RejectApproval = reject;
 
     const res = await axios.post(
-      `${NiftronTokenLambda}/approvals/${id}/reject`,
+      `${NiftronAPI}/transactions/approvals/${id}/reject`,
       postBody,
       {
         headers: {
@@ -281,7 +305,7 @@ export async function getApprovalsByUser(
       query += `limit=${limit}&page=${page}`;
     }
     const res = await axios.get(
-      `${NiftronTokenLambda}/users/${id}/approvals?${query}`,
+      `${NiftronAPI}/transactions/users/${id}/approvals?${query}`,
       {
         headers: {
           "Content-Type": "application/json",
@@ -308,7 +332,7 @@ export async function getTransfersBySender(
       query += `limit=${limit}&page=${page}`;
     }
     const res = await axios.get(
-      `${NiftronTokenLambda}/transfers/${id}/sender?${query}`,
+      `${NiftronAPI}/transactions/transfers/${id}/sender?${query}`,
       {
         headers: {
           "Content-Type": "application/json",
@@ -335,7 +359,7 @@ export async function getTransfersByReceiver(
       query += `limit=${limit}&page=${page}`;
     }
     const res = await axios.get(
-      `${NiftronTokenLambda}/transfers/${id}/receiver?${query}`,
+      `${NiftronAPI}/transactions/transfers/${id}/receiver?${query}`,
       {
         headers: {
           "Content-Type": "application/json",
@@ -353,7 +377,7 @@ export async function getTransfersByReceiver(
 }
 export async function getAccountById(id: string) {
   try {
-    const res = await axios.get(`${NiftronUserLambda}/users/${id}`, {
+    const res = await axios.get(`${NiftronAPI}/users/${id}`, {
       headers: {
         "Content-Type": "application/json",
       },
@@ -369,7 +393,7 @@ export async function getAccountById(id: string) {
 
 export async function getProjectByPublicKey(publicKey: string) {
   try {
-    const res = await axios.get(`${NiftronUserLambda}/projects/${publicKey}`, {
+    const res = await axios.get(`${NiftronAPI}/projects/${publicKey}`, {
       headers: {
         "Content-Type": "application/json",
       },
@@ -401,7 +425,7 @@ export async function activate(
       xdr
     };
     const res = await axios.post(
-      NiftronUserLambda + "/users/activate",
+      NiftronAPI + "/users/activate",
       postBody,
       {
         headers: {
@@ -429,7 +453,7 @@ export async function goLive(
       xdr
     };
     const res = await axios.post(
-      NiftronUserLambda + "/users/goLive",
+      NiftronAPI + "/users/goLive",
       postBody,
       {
         headers: {

@@ -1,5 +1,6 @@
 export const NiftronUserLambda = "https://32o47h3pc2.execute-api.us-east-1.amazonaws.com/prod";
 export const NiftronTokenLambda = "https://y548z5pqmi.execute-api.us-east-1.amazonaws.com/prod";
+export const NiftronAPI = "https://api.niftron.com";
 export const StellarUrlTest= "https://horizon-testnet.stellar.org"
 export const StellarUrl= "https://horizon.stellar.org"
 export const StellarNetwork="TestNet"
