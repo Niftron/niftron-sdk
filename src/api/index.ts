@@ -12,12 +12,12 @@ import {
   Token,
 } from "../models/niftronModels";
 /**
- * @param {Badge} badge Badge.
+ * @param {Token} token Token.
  * @return {number|null} 
  */
-export async function addToken(badge: Badge) {
+export async function addToken(token: Token) {
   try {
-    let postBody = badge;
+    let postBody = token;
     const res = await axios.post(
       NiftronAPI + "/tokens/mint/token",
       postBody,
@@ -30,7 +30,7 @@ export async function addToken(badge: Badge) {
     if (res == null) {
       return null;
     }
-    return res.status;
+    return res;
   } catch (err) {
     return null;
   }
@@ -155,6 +155,7 @@ export async function transfer(transferModel: Transfer) {
 export async function expressTransfer(transferModel: Transfer) {
   try {
     let postBody = transferModel;
+    console.log(postBody)
     const res = await axios.post(NiftronAPI + "/transactions/expressTransfer", postBody, {
       headers: {
         "Content-Type": "application/json",
@@ -165,6 +166,7 @@ export async function expressTransfer(transferModel: Transfer) {
     }
     return res.status;
   } catch (err) {
+    console.log(err);
     return null;
   }
 }
@@ -208,7 +210,7 @@ export async function getTokenById(id: string) {
 export async function trust(trustModel: any) {
   try {
     let postBody = trustModel;
-    const res = await axios.post(NiftronAPI + "/trust", postBody, {
+    const res = await axios.post(NiftronAPI + "/tokens/trust", postBody, {
       headers: {
         "Content-Type": "application/json",
       },

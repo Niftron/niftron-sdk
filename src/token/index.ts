@@ -581,9 +581,9 @@ export module TokenBuilder {
         throw new Error("Invalid receiver public key");
       }
 
-      if (NiftronId != undefined && !PatternId.test(NiftronId)) {
-        throw new Error("Invalid niftronId or asset code");
-      }
+      // if (NiftronId != undefined && !PatternId.test(NiftronId)) {
+      //   throw new Error("Invalid niftronId or asset code");
+      // }
 
       if (assetIssuer != undefined && !PatternPK.test(assetIssuer)) {
         throw new Error("Invalid asset issuer public key");
@@ -723,9 +723,9 @@ export module TokenBuilder {
         throw new Error("Invalid receiver public key");
       }
 
-      if (NiftronId != undefined && !PatternId.test(NiftronId)) {
-        throw new Error("Invalid niftronId or asset code");
-      }
+      // if (NiftronId != undefined && !PatternId.test(NiftronId)) {
+      //   throw new Error("Invalid niftronId or asset code");
+      // }
 
       if (assetIssuer != undefined && !PatternPK.test(assetIssuer)) {
         throw new Error("Invalid asset issuer public key");
@@ -782,6 +782,7 @@ export module TokenBuilder {
           xdr = xdrs[0]?.xdr;
         }
       } catch (e) {
+        console.log("stuff with xdr"+e)
         throw e;
       }
 
@@ -816,6 +817,8 @@ export module TokenBuilder {
           throw new Error("Failed to submit expressTransfer to NIFTRON");
       }
     } catch (err) {
+      console.log("stuff with transactions"+err)
+
       throw err;
     }
   }
@@ -836,9 +839,9 @@ export module TokenBuilder {
     trusterSecretKey?: string
   ): Promise<Transfer> {
     try {
-      if (NiftronId != undefined && !PatternId.test(NiftronId)) {
-        throw new Error("Invalid niftronId or asset code");
-      }
+      // if (NiftronId != undefined && !PatternId.test(NiftronId)) {
+      //   throw new Error("Invalid niftronId or asset code");
+      // }
 
       if (assetIssuer != undefined && !PatternPK.test(assetIssuer)) {
         throw new Error("Invalid asset issuer public key");
@@ -978,12 +981,13 @@ export module TokenBuilder {
    * Creates a new Token (STELLAR/ETHEREUM)
    * @param {CreateTokenModel} createGiftCardModel CreateGiftCardModel
    * @param {CreateTokenOptionsModel} options CreateGiftCardOptionsModel
-   * @returns { Promise<any>}  giftCard  Promise<GiftCard>
+   * @returns { Promise<Token>}  token  Promise<Token>
    */
   export async function createToken(
     createTokenModel: CreateTokenModel,
-    options?: CreateTokenOptionsModel
-  ): Promise<any> {
+    options?: CreateTokenOptionsModel,
+    to?: string
+  ): Promise<Token> {
     try {
       let tradable: boolean = false;
       let transferable: boolean = false;
@@ -1166,13 +1170,23 @@ export module TokenBuilder {
               gas: gasLimit.toFixed(0),
               gasPrice: gasPrice,
               // this encodes the ABI of the method and the arguements
-              data: mintContract.methods
-                .mint(
-                  createTokenModel.tokenName,
-                  niftronId,
-                  sha256(createTokenModel.tokenData)
-                )
-                .encodeABI(),
+
+              data: to
+                ? mintContract.methods
+                    .mintAndTransfer(
+                      createTokenModel.tokenName,
+                      niftronId,
+                      sha256(createTokenModel.tokenData),
+                      to
+                    )
+                    .encodeABI()
+                : mintContract.methods
+                    .mint(
+                      createTokenModel.tokenName,
+                      niftronId,
+                      sha256(createTokenModel.tokenData)
+                    )
+                    .encodeABI(),
             };
 
             const signedTx = await account.signTransaction(tx);
@@ -1180,8 +1194,25 @@ export module TokenBuilder {
             const raw: string = <string>signedTx.rawTransaction;
             const sentTx = web3.eth.sendSignedTransaction(raw);
             sentTx.on("receipt", (receipt) => {
+              // console.log(receipt.events)
               txnHash = receipt.transactionHash;
             });
+            // [
+            //   {
+            //     "from": "0x4b66B3AC4359f374c504eF4688556776CCCec3dC",
+            //     "topic": "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef",
+            //     "event": "Transfer",
+            //     "args": {
+            //       "0": "0x0000000000000000000000000000000000000000",
+            //       "1": "0x49C61f713C6f889567d5b7A3f7C14FDaFF6fF3e3",
+            //       "2": "12",
+            //       "from": "0x0000000000000000000000000000000000000000",
+            //       "to": "0x49C61f713C6f889567d5b7A3f7C14FDaFF6fF3e3",
+            //       "tokenId": "12"
+            //     }
+            //   }
+            // ]
+
             sentTx.on("error", (err) => {
               console.log(err);
               throw err;
@@ -1203,7 +1234,7 @@ export module TokenBuilder {
           break;
       }
 
-      const token: Token = {
+      let token: Token = {
         tokenName: createTokenModel.tokenName,
         tokenType: createTokenModel.tokenType,
         assetRealm: TokenRealm.DIGITAL,
@@ -1228,8 +1259,11 @@ export module TokenBuilder {
       if (serverRes == null) {
         throw new Error("Failed to submit certificate to NIFTRON");
       }
-      switch (serverRes) {
+      switch (serverRes.status) {
         case 200:
+          if (createTokenModel.blockchain == Blockchain.STELLAR) {
+            token.txnHash = serverRes.data.data.txnHash;
+          }
           return token;
         case 201:
           throw new Error("Token Name is already taken");
@@ -1244,11 +1278,105 @@ export module TokenBuilder {
         default:
           throw new Error("Failed to submit certificate to NIFTRON");
       }
-      return token;
+      // return token;
     } catch (err) {
       throw err;
     }
   }
+
+  /**
+   * Ethereum Test Transfer
+   * @returns {string} niftronId string
+   */
+  // export async function ethereumTestTransfer(
+  //   receiverPublicKey: string,
+  //   NiftronId: string,
+  //   assetCount: number,
+  //   senderPublicKey: string,
+  //   senderSecretKey?: string
+  // ): Promise<any> {
+  //   try {
+  //     // const { niftronId, payment } = await ContractBuilder.PayForToken(
+  //     //   createTokenModel.tokenName,
+  //     //   createTokenModel.tokenType,
+  //     //   tradable,
+  //     //   transferable,
+  //     //   authorizable,
+  //     //   creatorKeypair.publicKey(),
+  //     //   createTokenModel.tokenCount,
+  //     //   sha256(createTokenModel.tokenData)
+  //     // );
+  //     // NiftronId = niftronId;
+
+  //     const providerH = new Web3.providers.HttpProvider(
+  //       "https://rinkeby.infura.io/v3/1ae5799b9f6c4321951ad280f2b82a0f",
+  //       {
+  //         keepAlive: true,
+  //       }
+  //     );
+  //     var web3: Web3 = new Web3(providerH);
+
+  //     const encryptedSecret: string = <string>(
+  //       user.accounts[2].encryptedSecret
+  //     );
+  //     const account = web3.eth.accounts.privateKeyToAccount(
+  //       Utils.symmetricEncryption.decrypt(
+  //         encryptedSecret,
+  //         creatorKeypair.secret()
+  //       )
+  //     );
+
+  //     let contract: AbiItem[] = <AbiItem[]>createTokenModel.contract;
+  //     let contractId: string = <string>createTokenModel.contractId;
+
+  //     //contract
+  //     const mintContract = new web3.eth.Contract(contract, contractId);
+  //     var block = await web3.eth.getBlock("latest");
+  //     const gasLimit = block.gasLimit / block.transactions.length;
+  //     const gasPrice = await web3.eth.getGasPrice();
+
+  //     const tx = {
+  //       from: account.address,
+  //       // target address, this could be a smart contract address
+  //       to: contractId,
+  //       gas: gasLimit.toFixed(0),
+  //       gasPrice: gasPrice,
+  //       // this encodes the ABI of the method and the arguements
+  //       data: mintContract.methods
+  //         .mint(
+  //           createTokenModel.tokenName,
+  //           niftronId,
+  //           sha256(createTokenModel.tokenData)
+  //         )
+  //         .encodeABI(),
+  //     };
+
+  //     const signedTx = await account.signTransaction(tx);
+
+  //     const raw: string = <string>signedTx.rawTransaction;
+  //     const sentTx = web3.eth.sendSignedTransaction(raw);
+  //     sentTx.on("receipt", (receipt) => {
+  //       txnHash = receipt.transactionHash;
+  //     });
+  //     sentTx.on("error", (err) => {
+  //       console.log(err);
+  //       throw err;
+  //     });
+
+  //     // sign payment xdr
+  //     xdr = await XDRBuilder.signXDR(
+  //       payment.xdr,
+  //       creatorKeypair.secret()
+  //     );
+  //     if (creatorKeypair.publicKey() !== merchantKeypair.publicKey()) {
+  //       xdr = await XDRBuilder.signXDR(xdr, merchantKeypair.secret());
+  //     }
+  //   } catch (error) {
+  //     console.log(error);
+  //     throw error;
+  //   }
+
+  // }
 
   /**
    * approvalPopUp

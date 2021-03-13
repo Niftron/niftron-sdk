@@ -1,6 +1,6 @@
 {
   "name": "niftron-sdk",
-  "version": "3.0.0",
+  "version": "3.0.5",
   "description": "Niftron JS SDK",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
@@ -24,6 +24,7 @@
     "axios": "0.21.0",
     "crypto-js": "4.0.0",
     "ed2curve": "0.3.0",
+    "form-data": "^4.0.0",
     "jsonwebtoken": "8.5.1",
     "rxjs": "6.6.3",
     "sha256": "0.2.0",
