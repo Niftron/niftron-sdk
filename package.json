@@ -1,6 +1,6 @@
 {
   "name": "niftron-sdk",
-  "version": "3.0.5",
+  "version": "3.0.7",
   "description": "Niftron JS SDK",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
@@ -12,16 +12,16 @@
   "author": "zeemzo",
   "license": "MIT",
   "devDependencies": {
-    "typedoc": "^0.19.2",
-    "typedoc-twilio-theme": "^1.0.1",
-    "@types/jsonwebtoken": "8.5.0",
-    "typescript": "3.9.7",
     "@types/crypto-js": "4.0.1",
     "@types/ed2curve": "0.2.2",
-    "@types/sha256": "0.2.0"
+    "@types/jsonwebtoken": "8.5.0",
+    "@types/sha256": "0.2.0",
+    "typedoc": "^0.20.36",
+    "typedoc-twilio-theme": "^1.0.1",
+    "typescript": "3.9.7"
   },
   "dependencies": {
-    "axios": "0.21.0",
+    "axios": "^0.21.1",
     "crypto-js": "4.0.0",
     "ed2curve": "0.3.0",
     "form-data": "^4.0.0",
