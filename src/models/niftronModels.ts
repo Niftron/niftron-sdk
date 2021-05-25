@@ -59,6 +59,7 @@ export interface Token {
   tradable: boolean;
   transferable: boolean;
   category?: string;
+  blockchain?: Blockchain;
   assetCode?: string;
   assetIssuer: string;
   issuerAlias: string;
@@ -71,6 +72,8 @@ export interface Token {
   txnHash?: string;
   contract?: string;
   contractId?: string;
+  tokenId?: number;
+
 }
 
 /**
@@ -388,6 +391,11 @@ export interface CreateTokenModel {
 export enum Blockchain {
   STELLAR = "STELLAR",
   ETHEREUM = "ETHEREUM",
+  BSC = "BSC",
+  RINKEBY = "RINKEBY",
+  BSCTESTNET = "BSCTESTNET",
+  MATIC = "MATIC",
+  MUMBAI = "MUMBAI",
   // NEO = "NEO"
 }
 

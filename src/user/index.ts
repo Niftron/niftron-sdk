@@ -35,7 +35,9 @@ import {
   Server,
   Networks,
   TransactionBuilder,
-  Operation
+  Operation,
+  AccountResponse,
+  Account
 } from 'stellar-sdk'
 import { Utils } from '../utils'
 import { XDRBuilder } from '../xdrBuilder'
@@ -46,7 +48,7 @@ import { getAccountById, goLive, pledge, getTokenByIdList } from '../api'
  * User Module
  */
 export module User {
-  let authWindow: Window|null;
+  let authWindow: Window | null
   let secretKey: string
   let session: UserModel
   let merchantKeypair: Keypair
@@ -195,11 +197,10 @@ export module User {
         options += ',top=' + top
         options += ',left=' + left
 
-
-        if (authWindow && !authWindow.closed && authWindow.focus){
-          authWindow.focus();
+        if (authWindow && !authWindow.closed && authWindow.focus) {
+          authWindow.focus()
         } else {
-         authWindow = window.open(url,'','width=800,height=600');
+          authWindow = window.open(url, '', 'width=800,height=600')
         }
 
         // const MyWindow = window.open(url, title, options)
@@ -811,14 +812,21 @@ export module User {
   async function buildLoginXDR (keypair: Keypair) {
     try {
       let server = new Server(StellarUrlTest)
-      let sourceAccount
+      let sourceAccountRes: AccountResponse
+      let sourceAccount: Account
       let networkPassphrase
       try {
-        sourceAccount = await server.loadAccount(keypair.publicKey())
+        sourceAccountRes = await server.loadAccount(keypair.publicKey())
         networkPassphrase = Networks.TESTNET
       } catch (err2) {
         return null
       }
+
+      sourceAccount = new Account(
+        keypair.publicKey(),
+        sourceAccountRes.sequence
+      )
+
       let transaction = new TransactionBuilder(sourceAccount, {
         fee: '150',
         networkPassphrase: networkPassphrase
