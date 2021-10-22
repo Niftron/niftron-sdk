@@ -41,7 +41,7 @@ import Web3 from 'web3'
 import { AbiItem } from 'web3-utils'
 import { ContractBuilder } from '../contractBuilder'
 import { Utils } from '../utils'
-
+import BN from 'bn.js'
 /**
  * TokenBuilder Module
  */
@@ -1083,7 +1083,11 @@ export module TokenBuilder {
           : previewUrl
 
       const { ipfsHash, data } = await IpfsService.AddToIPFS(
-        createTokenModel.tokenData,
+        JSON.stringify({
+          name: createTokenModel.tokenName,
+          description: createTokenModel.tokenData,
+          image: previewUrl
+        }),
         encryptData ? creatorKeypair.secret() : undefined
       )
 
@@ -1136,10 +1140,7 @@ export module TokenBuilder {
             NiftronId = niftronId
 
             const providerH = new Web3.providers.HttpProvider(
-              'https://mainnet.infura.io/v3/1ae5799b9f6c4321951ad280f2b82a0f',
-              {
-                keepAlive: true
-              }
+              'https://mainnet.infura.io/v3/1ae5799b9f6c4321951ad280f2b82a0f'
             )
             var web3: Web3 = new Web3(providerH)
 
@@ -1158,22 +1159,24 @@ export module TokenBuilder {
 
             //contract
             const mintContract = new web3.eth.Contract(contract, contractId)
-            var block = await web3.eth.getBlock('latest')
-            const gasLimit = block.gasLimit / block.transactions.length
             const gasPrice = await web3.eth.getGasPrice()
+            const gasEstimation = await web3.eth.estimateGas({
+              to: contractId, // contract address
+              data: mintContract.methods.mint(to,`https://ipfs.io/ipfs/${ipfsHash}`).encodeABI(),
+              from: '0x3D0E93d68E2E40cd3D06d09C6B70DAe5c30A1b61'
+            })
 
             const tx = {
               from: account.address,
               // target address, this could be a smart contract address
               to: contractId,
-              gas: gasLimit.toFixed(0),
-              gasPrice: gasPrice,
+              gas: gasEstimation,
+              gasPrice: new BN(gasPrice),
               // this encodes the ABI of the method and the arguements
-
               data: to
-                ? mintContract.methods.mint(to).encodeABI()
+                ? mintContract.methods.mint(to,`https://ipfs.io/ipfs/${ipfsHash}`).encodeABI()
                 : mintContract.methods
-                    .mint(user.accounts[2].publicKey)
+                    .mint(user.accounts[2].publicKey,`https://ipfs.io/ipfs/${ipfsHash}`)
                     .encodeABI()
             }
 
@@ -1184,8 +1187,10 @@ export module TokenBuilder {
               const sentTx = await web3.eth.sendSignedTransaction(raw)
               // console.log(sentTx)
               // console.log(sentTx.logs[0].topics)
-              tokenId = parseInt(sentTx.logs[0].topics[3])
-              txnHash = sentTx.transactionHash
+              if (sentTx && sentTx.logs && sentTx.logs.length > 0) {
+                tokenId = parseInt(sentTx.logs[0].topics[3])
+                txnHash = sentTx.transactionHash
+              }
             } catch (err) {
               console.log(err)
               throw err
@@ -1220,10 +1225,7 @@ export module TokenBuilder {
             NiftronId = niftronId
 
             const providerH = new Web3.providers.HttpProvider(
-              'https://rinkeby.infura.io/v3/1ae5799b9f6c4321951ad280f2b82a0f',
-              {
-                keepAlive: true
-              }
+              'https://rinkeby.infura.io/v3/1ae5799b9f6c4321951ad280f2b82a0f'
             )
             var web3: Web3 = new Web3(providerH)
 
@@ -1242,22 +1244,24 @@ export module TokenBuilder {
 
             //contract
             const mintContract = new web3.eth.Contract(contract, contractId)
-            var block = await web3.eth.getBlock('latest')
-            const gasLimit = block.gasLimit / block.transactions.length
             const gasPrice = await web3.eth.getGasPrice()
+            const gasEstimation = await web3.eth.estimateGas({
+              to: contractId, // contract address
+              data: mintContract.methods.mint(to,`https://ipfs.io/ipfs/${ipfsHash}`).encodeABI(),
+              from: '0x3D0E93d68E2E40cd3D06d09C6B70DAe5c30A1b61'
+            })
 
             const tx = {
               from: account.address,
               // target address, this could be a smart contract address
               to: contractId,
-              gas: gasLimit.toFixed(0),
-              gasPrice: gasPrice,
+              gas: gasEstimation,
+              gasPrice: new BN(gasPrice),
               // this encodes the ABI of the method and the arguements
-
               data: to
-                ? mintContract.methods.mint(to).encodeABI()
+                ? mintContract.methods.mint(to,`https://ipfs.io/ipfs/${ipfsHash}`).encodeABI()
                 : mintContract.methods
-                    .mint(user.accounts[2].publicKey)
+                    .mint(user.accounts[2].publicKey,`https://ipfs.io/ipfs/${ipfsHash}`)
                     .encodeABI()
             }
 
@@ -1268,13 +1272,15 @@ export module TokenBuilder {
               const sentTx = await web3.eth.sendSignedTransaction(raw)
               // console.log(sentTx)
               // console.log(sentTx.logs[0].topics)
-              tokenId = parseInt(sentTx.logs[0].topics[3])
-              txnHash = sentTx.transactionHash
+              if (sentTx) {
+                tokenId = parseInt(sentTx.logs[0].topics[3])
+                txnHash = sentTx.transactionHash
+              }
             } catch (err) {
               console.log(err)
               throw err
             }
-            
+
             // sign payment xdr
             xdr = await XDRBuilder.signXDR(
               payment[0].xdr,
@@ -1304,10 +1310,7 @@ export module TokenBuilder {
             NiftronId = niftronId
 
             const providerH = new Web3.providers.HttpProvider(
-              'https://bsc-dataseed1.ninicoin.io',
-              {
-                keepAlive: true
-              }
+              'https://bsc-dataseed1.ninicoin.io'
             )
             var web3: Web3 = new Web3(providerH)
 
@@ -1326,22 +1329,24 @@ export module TokenBuilder {
 
             //contract
             const mintContract = new web3.eth.Contract(contract, contractId)
-            var block = await web3.eth.getBlock('latest')
-            const gasLimit = block.gasLimit / block.transactions.length
             const gasPrice = await web3.eth.getGasPrice()
+            const gasEstimation = await web3.eth.estimateGas({
+              to: contractId, // contract address
+              data: mintContract.methods.mint(to,`https://ipfs.io/ipfs/${ipfsHash}`).encodeABI(),
+              from: '0x3D0E93d68E2E40cd3D06d09C6B70DAe5c30A1b61'
+            })
 
             const tx = {
               from: account.address,
               // target address, this could be a smart contract address
               to: contractId,
-              gas: gasLimit.toFixed(0),
-              gasPrice: gasPrice,
+              gas: gasEstimation,
+              gasPrice: new BN(gasPrice),
               // this encodes the ABI of the method and the arguements
-
               data: to
-                ? mintContract.methods.mint(to).encodeABI()
+                ? mintContract.methods.mint(to,`https://ipfs.io/ipfs/${ipfsHash}`).encodeABI()
                 : mintContract.methods
-                    .mint(user.accounts[2].publicKey)
+                    .mint(user.accounts[2].publicKey,`https://ipfs.io/ipfs/${ipfsHash}`)
                     .encodeABI()
             }
 
@@ -1352,8 +1357,10 @@ export module TokenBuilder {
               const sentTx = await web3.eth.sendSignedTransaction(raw)
               // console.log(sentTx)
               // console.log(sentTx.logs[0].topics)
-              tokenId = parseInt(sentTx.logs[0].topics[3])
-              txnHash = sentTx.transactionHash
+              if (sentTx) {
+                tokenId = parseInt(sentTx.logs[0].topics[3])
+                txnHash = sentTx.transactionHash
+              }
             } catch (err) {
               console.log(err)
               throw err
@@ -1388,10 +1395,7 @@ export module TokenBuilder {
             NiftronId = niftronId
 
             const providerH = new Web3.providers.HttpProvider(
-              'https://data-seed-prebsc-1-s1.binance.org:8545/',
-              {
-                keepAlive: true
-              }
+              'https://data-seed-prebsc-1-s1.binance.org:8545/'
             )
             var web3: Web3 = new Web3(providerH)
 
@@ -1411,21 +1415,35 @@ export module TokenBuilder {
             //contract
             const mintContract = new web3.eth.Contract(contract, contractId)
             var block = await web3.eth.getBlock('latest')
-            const gasLimit = block.gasLimit / block.transactions.length
+            console.log('block:' + block)
+
+            console.log('block.gasLimit:' + block.gasLimit)
+            console.log(
+              'block.transactions.length:' + block.transactions.length
+            )
+            console.log(
+              'parseFloat(block.gasLimit.toString()):' +
+                parseFloat(block.gasLimit.toString())
+            )
+
             const gasPrice = await web3.eth.getGasPrice()
+            const gasEstimation = await web3.eth.estimateGas({
+              to: contractId, // contract address
+              data: mintContract.methods.mint(to,`https://ipfs.io/ipfs/${ipfsHash}`).encodeABI(),
+              from: '0x3D0E93d68E2E40cd3D06d09C6B70DAe5c30A1b61'
+            })
 
             const tx = {
               from: account.address,
               // target address, this could be a smart contract address
               to: contractId,
-              gas: gasLimit.toFixed(0),
-              gasPrice: gasPrice,
+              gas: gasEstimation,
+              gasPrice: new BN(gasPrice),
               // this encodes the ABI of the method and the arguements
-
               data: to
-                ? mintContract.methods.mint(to).encodeABI()
+                ? mintContract.methods.mint(to,`https://ipfs.io/ipfs/${ipfsHash}`).encodeABI()
                 : mintContract.methods
-                    .mint(user.accounts[2].publicKey)
+                    .mint(user.accounts[2].publicKey,`https://ipfs.io/ipfs/${ipfsHash}`)
                     .encodeABI()
             }
 
@@ -1436,8 +1454,10 @@ export module TokenBuilder {
               const sentTx = await web3.eth.sendSignedTransaction(raw)
               // console.log(sentTx)
               // console.log(sentTx.logs[0].topics)
-              tokenId = parseInt(sentTx.logs[0].topics[3])
-              txnHash = sentTx.transactionHash
+              if (sentTx) {
+                tokenId = parseInt(sentTx.logs[0].topics[3])
+                txnHash = sentTx.transactionHash
+              }
             } catch (err) {
               console.log(err)
               throw err
@@ -1484,7 +1504,7 @@ export module TokenBuilder {
         previewUrl,
         isUrl: createTokenModel.previewImageUrl != undefined ? true : false,
         ipfsHash: ipfsHash,
-        txnHash,
+        txnHash: txnHash ? txnHash : undefined,
         price: tokenCost,
         xdr,
         contract: createTokenModel.contract,
