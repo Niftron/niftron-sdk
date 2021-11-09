@@ -76,7 +76,7 @@ export module TokenBuilder {
    * @param {CreateCertificateOptionsModel} options CreateCertificateOptionsModel
    * @returns {string} niftronId string
    */
-  export async function createCertificate (
+  export async function createCertificate(
     createCertificateModel: CreateCertificateModel,
     options?: CreateCertificateOptionsModel
   ): Promise<Certificate> {
@@ -236,7 +236,7 @@ export module TokenBuilder {
    * @param {CreateBadgeOptionsModel} options CreateBadgeOptionsModel
    * @returns {string} niftronId string
    */
-  export async function createBadge (
+  export async function createBadge(
     createBadgeModel: CreateBadgeModel,
     options?: CreateBadgeOptionsModel
   ): Promise<Badge | null> {
@@ -404,7 +404,7 @@ export module TokenBuilder {
    * @param {CreateGiftCardOptionsModel} options CreateGiftCardOptionsModel
    * @returns { Promise<GiftCard>}  giftCard  Promise<GiftCard>
    */
-  export async function createGiftCard (
+  export async function createGiftCard(
     createGiftCardModel: CreateGiftCardModel,
     options?: CreateGiftCardOptionsModel
   ): Promise<GiftCard> {
@@ -563,7 +563,7 @@ export module TokenBuilder {
    * @param {boolean} test boolean.
    * @returns {string} niftronId string
    */
-  export async function transferToken (
+  export async function transferToken(
     receiverPublicKey: string,
     NiftronId: string,
     assetIssuer: string,
@@ -705,7 +705,7 @@ export module TokenBuilder {
    * @param {boolean} test boolean.
    * @returns {Transfer} transfer Transfer
    */
-  export async function expressTransferToken (
+  export async function expressTransferToken(
     receiverPublicKey: string,
     NiftronId: string,
     assetIssuer: string,
@@ -830,7 +830,7 @@ export module TokenBuilder {
 
    * @returns {Transfer} transfer Transfer
    */
-  export async function trustToken (
+  export async function trustToken(
     NiftronId: string,
     assetIssuer: string,
     trusterPublickey: string,
@@ -981,7 +981,7 @@ export module TokenBuilder {
    * @param {CreateTokenOptionsModel} options CreateGiftCardOptionsModel
    * @returns { Promise<Token>}  token  Promise<Token>
    */
-  export async function createToken (
+  export async function createToken(
     createTokenModel: CreateTokenModel,
     options?: CreateTokenOptionsModel,
     to?: string
@@ -1065,10 +1065,12 @@ export module TokenBuilder {
       if (projectPublicKey) {
         const project = await getProjectByPublicKey(projectPublicKey)
         if (project == null) {
-          throw new Error('Project not found in niftron')
+          // throw new Error('Project not found in niftron')
+        } else {
+          IssuerPublicKey = project.projectIssuer.publicKey
+          IssuerAlias = project.name
         }
-        IssuerPublicKey = project.projectIssuer.publicKey
-        IssuerAlias = project.name
+
       }
 
       //set token preview image
@@ -1162,7 +1164,7 @@ export module TokenBuilder {
             const gasPrice = await web3.eth.getGasPrice()
             const gasEstimation = await web3.eth.estimateGas({
               to: contractId, // contract address
-              data: mintContract.methods.mint(to,`https://ipfs.io/ipfs/${ipfsHash}`).encodeABI(),
+              data: mintContract.methods.mint(to, `https://ipfs.io/ipfs/${ipfsHash}`).encodeABI(),
               from: '0x3D0E93d68E2E40cd3D06d09C6B70DAe5c30A1b61'
             })
 
@@ -1174,10 +1176,10 @@ export module TokenBuilder {
               gasPrice: new BN(gasPrice),
               // this encodes the ABI of the method and the arguements
               data: to
-                ? mintContract.methods.mint(to,`https://ipfs.io/ipfs/${ipfsHash}`).encodeABI()
+                ? mintContract.methods.mint(to, `https://ipfs.io/ipfs/${ipfsHash}`).encodeABI()
                 : mintContract.methods
-                    .mint(user.accounts[2].publicKey,`https://ipfs.io/ipfs/${ipfsHash}`)
-                    .encodeABI()
+                  .mint(user.accounts[2].publicKey, `https://ipfs.io/ipfs/${ipfsHash}`)
+                  .encodeABI()
             }
 
             const signedTx = await account.signTransaction(tx)
@@ -1247,7 +1249,7 @@ export module TokenBuilder {
             const gasPrice = await web3.eth.getGasPrice()
             const gasEstimation = await web3.eth.estimateGas({
               to: contractId, // contract address
-              data: mintContract.methods.mint(to,`https://ipfs.io/ipfs/${ipfsHash}`).encodeABI(),
+              data: mintContract.methods.mint(to, `https://ipfs.io/ipfs/${ipfsHash}`).encodeABI(),
               from: '0x3D0E93d68E2E40cd3D06d09C6B70DAe5c30A1b61'
             })
 
@@ -1259,10 +1261,10 @@ export module TokenBuilder {
               gasPrice: new BN(gasPrice),
               // this encodes the ABI of the method and the arguements
               data: to
-                ? mintContract.methods.mint(to,`https://ipfs.io/ipfs/${ipfsHash}`).encodeABI()
+                ? mintContract.methods.mint(to, `https://ipfs.io/ipfs/${ipfsHash}`).encodeABI()
                 : mintContract.methods
-                    .mint(user.accounts[2].publicKey,`https://ipfs.io/ipfs/${ipfsHash}`)
-                    .encodeABI()
+                  .mint(user.accounts[2].publicKey, `https://ipfs.io/ipfs/${ipfsHash}`)
+                  .encodeABI()
             }
 
             const signedTx = await account.signTransaction(tx)
@@ -1332,7 +1334,7 @@ export module TokenBuilder {
             const gasPrice = await web3.eth.getGasPrice()
             const gasEstimation = await web3.eth.estimateGas({
               to: contractId, // contract address
-              data: mintContract.methods.mint(to,`https://ipfs.io/ipfs/${ipfsHash}`).encodeABI(),
+              data: mintContract.methods.mint(to, `https://ipfs.io/ipfs/${ipfsHash}`).encodeABI(),
               from: '0x3D0E93d68E2E40cd3D06d09C6B70DAe5c30A1b61'
             })
 
@@ -1344,10 +1346,10 @@ export module TokenBuilder {
               gasPrice: new BN(gasPrice),
               // this encodes the ABI of the method and the arguements
               data: to
-                ? mintContract.methods.mint(to,`https://ipfs.io/ipfs/${ipfsHash}`).encodeABI()
+                ? mintContract.methods.mint(to, `https://ipfs.io/ipfs/${ipfsHash}`).encodeABI()
                 : mintContract.methods
-                    .mint(user.accounts[2].publicKey,`https://ipfs.io/ipfs/${ipfsHash}`)
-                    .encodeABI()
+                  .mint(user.accounts[2].publicKey, `https://ipfs.io/ipfs/${ipfsHash}`)
+                  .encodeABI()
             }
 
             const signedTx = await account.signTransaction(tx)
@@ -1423,13 +1425,13 @@ export module TokenBuilder {
             )
             console.log(
               'parseFloat(block.gasLimit.toString()):' +
-                parseFloat(block.gasLimit.toString())
+              parseFloat(block.gasLimit.toString())
             )
 
             const gasPrice = await web3.eth.getGasPrice()
             const gasEstimation = await web3.eth.estimateGas({
               to: contractId, // contract address
-              data: mintContract.methods.mint(to,`https://ipfs.io/ipfs/${ipfsHash}`).encodeABI(),
+              data: mintContract.methods.mint(to, `https://ipfs.io/ipfs/${ipfsHash}`).encodeABI(),
               from: '0x3D0E93d68E2E40cd3D06d09C6B70DAe5c30A1b61'
             })
 
@@ -1441,10 +1443,10 @@ export module TokenBuilder {
               gasPrice: new BN(gasPrice),
               // this encodes the ABI of the method and the arguements
               data: to
-                ? mintContract.methods.mint(to,`https://ipfs.io/ipfs/${ipfsHash}`).encodeABI()
+                ? mintContract.methods.mint(to, `https://ipfs.io/ipfs/${ipfsHash}`).encodeABI()
                 : mintContract.methods
-                    .mint(user.accounts[2].publicKey,`https://ipfs.io/ipfs/${ipfsHash}`)
-                    .encodeABI()
+                  .mint(user.accounts[2].publicKey, `https://ipfs.io/ipfs/${ipfsHash}`)
+                  .encodeABI()
             }
 
             const signedTx = await account.signTransaction(tx)
@@ -1637,7 +1639,7 @@ export module TokenBuilder {
   /**
    * approvalPopUp
    */
-  export async function approvalPopUp (): Promise<string | null> {
+  export async function approvalPopUp(): Promise<string | null> {
     return new Promise(resolve => {
       const url =
         'https://account.niftron.com/' +
