@@ -1,6 +1,6 @@
 {
   "name": "niftron-sdk",
-  "version": "3.0.17",
+  "version": "3.0.19",
   "description": "Niftron JS SDK",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",

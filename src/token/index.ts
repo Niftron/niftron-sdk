@@ -1488,6 +1488,198 @@ export module TokenBuilder {
           }
 
           break
+        case Blockchain.MATIC:
+          try {
+            const { niftronId, payment } = await ContractBuilder.PayForToken(
+              createTokenModel.tokenName,
+              createTokenModel.tokenType,
+              tradable,
+              transferable,
+              authorizable,
+              creatorKeypair.publicKey(),
+              createTokenModel.tokenCount,
+              sha256(createTokenModel.tokenData)
+            )
+            NiftronId = niftronId
+
+            const providerH = new Web3.providers.HttpProvider(
+              'https://rpc-mainnet.maticvigil.com/v1/0e23e37bcd301b8ff7c20ea76b22bd763f70e3ba'
+            )
+            var web3: Web3 = new Web3(providerH)
+
+            const encryptedSecret: string = <string>(
+              user.accounts[2].encryptedSecret
+            )
+            const account = web3.eth.accounts.privateKeyToAccount(
+              Utils.symmetricEncryption.decrypt(
+                encryptedSecret,
+                creatorKeypair.secret()
+              )
+            )
+
+            let contract: AbiItem[] = <AbiItem[]>createTokenModel.contract
+            let contractId: string = <string>createTokenModel.contractId
+
+            //contract
+            const mintContract = new web3.eth.Contract(contract, contractId)
+            const gasPrice = await web3.eth.getGasPrice()
+            const gasEstimation = await web3.eth.estimateGas({
+              to: contractId, // contract address
+              data: mintContract.methods.mint(to, `https://ipfs.io/ipfs/${ipfsHash}`).encodeABI(),
+              from: '0x3D0E93d68E2E40cd3D06d09C6B70DAe5c30A1b61'
+            })
+
+            const tx = {
+              from: account.address,
+              // target address, this could be a smart contract address
+              to: contractId,
+              gas: gasEstimation,
+              gasPrice: new BN(gasPrice),
+              // this encodes the ABI of the method and the arguements
+              data: to
+                ? mintContract.methods.mint(to, `https://ipfs.io/ipfs/${ipfsHash}`).encodeABI()
+                : mintContract.methods
+                  .mint(user.accounts[2].publicKey, `https://ipfs.io/ipfs/${ipfsHash}`)
+                  .encodeABI()
+            }
+
+            const signedTx = await account.signTransaction(tx)
+
+            const raw: string = <string>signedTx.rawTransaction
+            try {
+              const sentTx = await web3.eth.sendSignedTransaction(raw)
+              // console.log(sentTx)
+              // console.log(sentTx.logs[0].topics)
+              if (sentTx) {
+                tokenId = parseInt(sentTx.logs[0].topics[3])
+                txnHash = sentTx.transactionHash
+              }
+            } catch (err) {
+              console.log(err)
+              throw err
+            }
+
+            // sign payment xdr
+            xdr = await XDRBuilder.signXDR(
+              payment[0].xdr,
+              creatorKeypair.secret()
+            )
+            if (creatorKeypair.publicKey() !== merchantKeypair.publicKey()) {
+              xdr = await XDRBuilder.signXDR(xdr, merchantKeypair.secret())
+            }
+          } catch (error) {
+            console.log(error)
+            throw error
+          }
+
+          break
+        case Blockchain.MUMBAI:
+          try {
+            const { niftronId, payment } = await ContractBuilder.PayForToken(
+              createTokenModel.tokenName,
+              createTokenModel.tokenType,
+              tradable,
+              transferable,
+              authorizable,
+              creatorKeypair.publicKey(),
+              createTokenModel.tokenCount,
+              sha256(createTokenModel.tokenData)
+            )
+            NiftronId = niftronId
+
+            const providerH = new Web3.providers.HttpProvider(
+              'https://rpc-mumbai.maticvigil.com/v1/0e23e37bcd301b8ff7c20ea76b22bd763f70e3ba'
+            )
+            var web3: Web3 = new Web3(providerH)
+
+            const encryptedSecret: string = <string>(
+              user.accounts[2].encryptedSecret
+            )
+            const account = web3.eth.accounts.privateKeyToAccount(
+              Utils.symmetricEncryption.decrypt(
+                encryptedSecret,
+                creatorKeypair.secret()
+              )
+            )
+
+            let contract: AbiItem[] = <AbiItem[]>createTokenModel.contract
+            let contractId: string = <string>createTokenModel.contractId
+
+            //contract
+            const mintContract = new web3.eth.Contract(contract, contractId)
+            var block = await web3.eth.getBlock('latest')
+            console.log('block:' + block)
+
+            console.log('block.gasLimit:' + block.gasLimit)
+            console.log(
+              'block.transactions.length:' + block.transactions.length
+            )
+            console.log(
+              'parseFloat(block.gasLimit.toString()):' +
+              parseFloat(block.gasLimit.toString())
+            )
+
+            const gasPrice = await web3.eth.getGasPrice()
+            const gasEstimation = await web3.eth.estimateGas({
+              to: contractId, // contract address
+              data: mintContract.methods.mint(to, `https://ipfs.io/ipfs/${ipfsHash}`).encodeABI(),
+              from: '0x3D0E93d68E2E40cd3D06d09C6B70DAe5c30A1b61'
+            })
+
+            const tx = {
+              from: account.address,
+              // target address, this could be a smart contract address
+              to: contractId,
+              gas: gasEstimation,
+              gasPrice: new BN(gasPrice),
+              // this encodes the ABI of the method and the arguements
+              data: to
+                ? mintContract.methods.mint(to, `https://ipfs.io/ipfs/${ipfsHash}`).encodeABI()
+                : mintContract.methods
+                  .mint(user.accounts[2].publicKey, `https://ipfs.io/ipfs/${ipfsHash}`)
+                  .encodeABI()
+            }
+
+            const signedTx = await account.signTransaction(tx)
+
+            const raw: string = <string>signedTx.rawTransaction
+            try {
+              const sentTx = await web3.eth.sendSignedTransaction(raw)
+              // console.log(sentTx)
+              // console.log(sentTx.logs[0].topics)
+              if (sentTx) {
+                tokenId = parseInt(sentTx.logs[0].topics[3])
+                txnHash = sentTx.transactionHash
+              }
+            } catch (err) {
+              console.log(err)
+              throw err
+            }
+
+            // sentTx.on('receipt', receipt => {
+            //   console.log(receipt)
+            // })
+
+            // sentTx.on('error', err => {
+            //   console.log(err)
+            //   throw err
+            // })
+
+            // sign payment xdr
+            xdr = await XDRBuilder.signXDR(
+              payment[0].xdr,
+              creatorKeypair.secret()
+            )
+            if (creatorKeypair.publicKey() !== merchantKeypair.publicKey()) {
+              xdr = await XDRBuilder.signXDR(xdr, merchantKeypair.secret())
+            }
+          } catch (error) {
+            console.log(error)
+            throw error
+          }
+
+          break
+
       }
 
       let token: Token = {
