@@ -19,7 +19,9 @@ export module IpfsService {
 
       const res = await axios.post("https://ipfs.infura.io:5001/api/v0/add", formData,
         {
-          headers:formData.getHeaders()
+          headers: {
+            ...formData.getHeaders(), "Authorization": "Basic MkRDUm14VDFwV3FWYkR3cHRzcWdKcVQ5V3d0OmQyYWI4NWMyYmE0ZmRmZjlhODRkOWVlMTc3MDM3OGE2",
+          }
         }
       );
       if (res === null) {
