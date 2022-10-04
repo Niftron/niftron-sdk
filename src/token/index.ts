@@ -694,6 +694,148 @@ export module TokenBuilder {
       throw err
     }
   }
+    /**
+   * Transfer Token
+   * @param {string} receiverPublicKey string.
+   * @param {string} NiftronId string.
+   * @param {string} assetIssuer string.
+   * @param {number} assetCount number.
+   * @param {string} senderPublickey string.
+   * @param {string} senderSecretKey string.
+   * @param {boolean} test boolean.
+   * @returns {string} niftronId string
+   */
+     export async function transferTokenIssue(
+      receiverPublicKey: string,
+      NiftronId: string,
+      assetIssuer: string,
+      assetCount: number,
+      senderPublicKey: string,
+      senderSecretKey?: string
+    ): Promise<Transfer> {
+      try {
+        if (
+          receiverPublicKey != undefined &&
+          !PatternPK.test(receiverPublicKey)
+        ) {
+          throw new Error('Invalid receiver public key')
+        }
+  
+        // if (NiftronId != undefined && !PatternId.test(NiftronId)) {
+        //   throw new Error("Invalid niftronId or asset code");
+        // }
+  
+        if (assetIssuer != undefined && !PatternPK.test(assetIssuer)) {
+          throw new Error('Invalid asset issuer public key')
+        }
+  
+        if (senderPublicKey != undefined && !PatternPK.test(senderPublicKey)) {
+          throw new Error('Invalid sender public key')
+        }
+  
+        if (senderSecretKey != undefined && !PatternSK.test(senderSecretKey)) {
+          throw new Error('Invalid sender secret key')
+        }
+  
+        let senderKeypair: NiftronKeypair =
+          senderSecretKey != undefined
+            ? Keypair.fromSecret(senderSecretKey)
+            : merchantKeypair
+  
+        if (
+          senderPublicKey != undefined &&
+          senderPublicKey != merchantKeypair.publicKey()
+        ) {
+          const secretKey = await approvalPopUp()
+          if (secretKey == null) {
+            throw new Error('Sender account did not approve the transaction')
+          }
+          senderKeypair = Keypair.fromSecret(secretKey)
+        }
+  
+        let xdr
+        let rejectXdr
+  
+        try {
+          const { xdrs } = await XDRBuilder.transferBadgeIssue(
+            senderPublicKey,
+            receiverPublicKey,
+            assetIssuer,
+            NiftronId,
+            assetCount
+          )
+          if (xdrs != null && xdrs.length > 0) {
+            await Promise.all(
+              xdrs.map(async (item: any, index: number) => {
+                xdrs[index].xdr = await XDRBuilder.signXDR(
+                  item.xdr,
+                  senderKeypair.secret()
+                )
+                if (senderPublicKey !== merchantKeypair.publicKey()) {
+                  xdrs[index].xdr = await XDRBuilder.signXDR(
+                    xdrs[index].xdr,
+                    merchantKeypair.secret()
+                  )
+                }
+              })
+            )
+            xdr = xdrs[0]?.xdr
+            rejectXdr = xdrs[1]?.xdr
+          }
+        } catch (e) {
+          throw e
+        }
+  
+        //in testnet (should add check to change)
+        let parsedTx: Transaction = new Transaction(xdr, Networks.TESTNET)
+        // let parsedRejectTx: Transaction = new Transaction(rejectXdr, Networks.TESTNET);
+  
+        let txnHash = parsedTx.hash().toString('hex')
+        // let txnHash = parsedTx.hash().toString("hex");
+        const tokenRes = await getTokenById(NiftronId)
+        if (tokenRes == null) {
+          throw new Error('Token not found')
+        }
+  
+        const transferModel: Transfer = {
+          transferType: '0',
+          sender: senderPublicKey,
+          receiver: receiverPublicKey,
+          assetCode: NiftronId,
+          assetIssuer,
+          assetCount,
+          tokenName: tokenRes.data.tokenName,
+          previewUrl: tokenRes.data.previewUrl,
+          xdr,
+          rejectXdr,
+          signers: [
+            {
+              publicKey: senderPublicKey,
+              status: SignerStatus.ACCEPTED
+            }
+          ]
+        }
+        const serverRes = await transfer(transferModel)
+        if (serverRes == null) {
+          throw new Error('Failed to submit expressTransfer to NIFTRON')
+        }
+        switch (serverRes) {
+          case 200:
+            transferModel.txnHash = txnHash
+            return transferModel
+          case 201:
+            throw new Error('Account not found in niftron')
+          case 202:
+            throw new Error('Token not found')
+          case 400:
+            throw new Error('Failed to submit transfer to NIFTRON')
+          default:
+            throw new Error('Failed to submit transfer to NIFTRON')
+        }
+      } catch (err) {
+        throw err
+      }
+    }
   /**
    * Express Transfer Token
    * @param {string} receiverPublicKey string.

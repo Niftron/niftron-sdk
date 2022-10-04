@@ -22,7 +22,7 @@ export interface XDR {
   xdr: string;
   version: string;
   signers?: Array<string>;
-  sequence?: number;
+  sequence?: string;
   niftronCost?: number;
 }
 

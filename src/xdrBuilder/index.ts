@@ -423,6 +423,61 @@ export module XDRBuilder {
       throw err;
     }
   };
+    /**
+   * Build Transfer Badge XDR
+   * @param {string} sender string
+   * @param {string} receiver string
+   * @param {string} assetIssuer string
+   * @param {string} assetCode string
+   * @param {string} assetCount string
+   * @param {Array<string>} approvers Array<string>
+   * @param {Date} minTime Date
+   * @param {Date} maxTime Date
+   * @returns {TransferCertificateXDR} transferCertificateXDR TransferCertificateXDR
+   */
+     export async function transferBadgeIssue(
+      sender: string,
+      receiver: string,
+      assetIssuer: string,
+      assetCode: string,
+      assetCount: number,
+      approvers?: Array<string>,
+      minTime?: Date,
+      maxTime?: Date
+    ): Promise<any> {
+      try {
+        let postBody = {
+          sender,
+          receiver,
+          merchant: projectPublicKey ? projectPublicKey : merchantKeypair.publicKey(),
+          assetIssuer,
+          assetCode,
+          assetCount,
+          approvers,
+          minTime,
+          maxTime,
+        };
+        const res = await axios.post(
+          NiftronAPI + "/xdrs/transferIssue/badge",
+          postBody,
+          {
+            headers: {
+              "Content-Type": "application/json",
+            },
+          }
+        );
+        if (res === null) {
+          throw Error("failed to build transfer badge xdr");
+        }
+        const xdrs = res.data.data;
+        // const secondaryPublicKey = res.data.metaData?.secondaryPublicKey
+        return {
+          xdrs, //, secondaryPublicKey
+        };
+      } catch (err) {
+        throw err;
+      }
+    };
 
   /**
    * Build Mint GiftCard XDR

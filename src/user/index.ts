@@ -245,6 +245,7 @@ export module User {
   ): Promise<number | null> {
     try {
       let publicKey = keypair.publicKey()
+      let secondaryPublicKey = keypair.publicKey()
 
       let pash = ''
       let encryptedSecret = ''
@@ -265,15 +266,16 @@ export module User {
         )
       }
 
-      let { xdrs, secondaryPublicKey } = await XDRBuilder.register(
-        keypair.publicKey()
-      )
+      // commented to make registration faster without stellar
+      // let { xdrs, secondaryPublicKey } = await XDRBuilder.register(
+      //   keypair.publicKey()
+      // )
 
-      await Promise.all(
-        xdrs.map(async (item: XDR, index: number, array: Array<XDR>) => {
-          xdrs[index].xdr = await XDRBuilder.signXDR(item.xdr, keypair.secret())
-        })
-      )
+      // await Promise.all(
+      //   xdrs.map(async (item: XDR, index: number, array: Array<XDR>) => {
+      //     xdrs[index].xdr = await XDRBuilder.signXDR(item.xdr, keypair.secret())
+      //   })
+      // )
 
       let accounts = []
       accounts.push({ publicKey: keypair.publicKey(), accountType: '0' })
@@ -289,7 +291,7 @@ export module User {
         recoveryQuestion: recoveryQuestion,
         authType: authType,
         accounts: accounts,
-        xdrs
+        xdrs:[]
       }
       const res = await axios.post(
         NiftronUserLambda + '/users/register',
